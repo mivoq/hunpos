@@ -1,6 +1,6 @@
 let add_sentence t sentence = 
   let window = Ngram.empty in
-  let f (window, t) (_, gold)  = 
+  let f (window, t) (word, gold)  = 
 	let window = Ngram.shift_right window gold in
     let t = Ngramtree.add t (window) in
 	(window, t)
@@ -9,7 +9,9 @@ let add_sentence t sentence =
   let (w, t) = f  (w,t) ("</s>", "</s>") in
 	t
 
-let chan = open_in "szeged.ful.0.test"
+let chan = open_in "szeged.ful.0.test" 
+	(* test.train *) 
+	(* szeged.ful.0.test *)
 
 let rec build_tree t =
   try 
@@ -22,6 +24,19 @@ let _ =
   let tree = Ngramtree.empty in
   Printf.printf "building...\n";
   let tree = build_tree tree in
-  Printf.printf "printing...\n";
+
+  let print_ngram tree ngram freq =
+	print_int freq; print_char ' ';
+	Ngram.print ngram ;
+	let freqv = Ngramtree.freq ngram tree in
+	  List.iter (fun f -> print_int f; print_char ' ';) freqv ;
+	  print_newline ();
+ in
+Ngramtree.print tree;
+(*	Ngramtree.iter (print_ngram tree) 3 tree; *)
+	let lamdas = Deleted_interpolation.calculate_lamdas tree 3 in
+		Array.iteri (fun i v -> Printf.printf "%d = %f\n" i v) lamdas
+(*  Printf.printf "printing...\n";
   flush stdout;
   Ngramtree.print tree;
+*)
