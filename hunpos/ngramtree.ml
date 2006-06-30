@@ -13,31 +13,43 @@ type tree =  Node of int * tree Cmap.t
 (* function to create an empty tree *)	
 let empty = Node ( 0, Cmap.empty)
 
-	(*s Insertion of a new ngram in the tree is just a matter of descending in
-	    the tree, taking the branches corresponding to the successive gram.
-	    Each time a branch does not exist, we continue the insertion in a new
-	    empty tree. When the insertion is done in the subtree, we update the
-	    branching to the new subtree. *)
+(*s Insertion of a new ngram in the tree is just a matter of descending in
+  the tree, taking the branches corresponding to the successive gram.
+  Each time a branch does not exist, we continue the insertion in a new
+  empty tree. When the insertion is done in the subtree, we update the
+   branching to the new subtree. *)
 
-	let rec add  tree ngram = match (tree, ngram) with 
-			| ((Node (freq, childs) as n) , h::t) ->
-				(* sima eset, megyunk lefele, es ezt noveljuk eggyel *)
-	               let child = try Cmap.find h childs with Not_found -> empty in
-			          let t' = add child t in
-						  Node ((succ freq), Cmap.add h t' childs)
-			| ((Node (freq, childs) as n) , []) ->
-				Node ((succ freq), childs)
+let rec add  tree ngram = match (tree, ngram) with 
+		| ((Node (freq, childs) as n) , h::t) ->
+			(* sima eset, megyunk lefele, es ezt noveljuk eggyel *)
+               let child = try Cmap.find h childs with Not_found -> empty in
+		          let t' = add child t in
+					  Node ((succ freq), Cmap.add h t' childs)
+		| (Node (freq, childs) , []) ->
+			Node ((succ freq), childs)
 		
+(* a faban levo n-grammokat atadja f-nek 
+	f [t1, t2, t3] freq 
+*)
+let iter f n tree =
+	(* csinalunk egy teljes melysegi bejarast, es ha n melyen vagyunk, akkor hivjuk f-t *)
 	
-	let print t =
-		let rec print_tree level str (Node (f, m) as t) =
-				for i = 1 to level do
-					print_char '\t'
-				done;
-				Printf.printf "%s\t%d\n" str f;
-			    Cmap.iter (fun k v -> print_tree (succ level) k v) m
-		in
-		print_tree 0 "root" t
+	let rec aux level ngram  (Node (freq, m) as t) =
+		if level < n then
+			Cmap.iter (fun str child -> aux (succ level) (str :: ngram) child) m
+		else if level = n then f ngram freq
+	in
+	aux 0 [] tree	
+	 	
+let print t =
+	let rec print_tree level str (Node (f, m) as t) =
+			for i = 1 to level do
+				print_char '\t'
+			done;
+			Printf.printf "%s\t%d\n" str f;
+		    Cmap.iter (fun k v -> print_tree (succ level) k v) m
+	in
+	print_tree 0 "root" t
 				
 	(* jumps to a node representing the prefix.
 		raises Not_found exception if the prefix not found in the trie 
