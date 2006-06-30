@@ -40,7 +40,17 @@ let iter f n tree =
 		else if level = n then f ngram freq
 	in
 	aux 0 [] tree	
-	 	
+
+(* a [t1, t2, t3] ngrammhoz vissza adja [N, freq([t3]), freq([t2, t3]), freq[t1, t2, t3]] listat *)
+let freq ngram tree =
+		let rec aux ngram (Node(freq, childs) as n)  =
+		
+			match ngram with
+				| []   -> freq :: []
+				| h::t ->  try freq :: (aux t (Cmap.find h childs) ) with Not_found -> 0 :: []
+		in
+		aux (List.rev ngram) tree
+					
 let print t =
 	let rec print_tree level str (Node (f, m) as t) =
 			for i = 1 to level do
