@@ -50,7 +50,7 @@ let calculate_lamdas tree n =
 		let rec searchmax max maxi i nominator denominator =
 			match (nominator, denominator) with 
 				(nh::nt, dh::dt) ->  
-                    let ratio = if nh < 2 || dh <2 then (0.0) else float (nh -1) /. float (dh -1)  in
+                    let ratio = if nh == 1 || dh == 1 then (0.0) else float (nh -1) /. float (dh -1)  in
 					let (max, maxi) = if ratio  > max then (ratio, i) else (max, maxi) in
 						searchmax max maxi (succ i) nt dt
 				| (_ , _ ) -> (max, maxi)
