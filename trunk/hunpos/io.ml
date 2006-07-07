@@ -52,10 +52,13 @@ with End_of_file -> ()
 
 ;;
 
-
+let rec fold_sentence f a chan =
+	 try
+	 	let sentence = read_sentence chan in
+	 	fold_sentence f (f a sentence) chan
+	with End_of_file -> a
 
 let print_sentence sentence =
-	let ngram = ["s"] in 
 	let print_pair (word, gold) = 
 		Printf.fprintf stdout "%s\t%s\n" word gold;
 	

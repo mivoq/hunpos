@@ -1,42 +1,68 @@
-let add_sentence t sentence = 
-  let window = Ngram.empty in
-  let f (window, t) (word, gold)  = 
+
+
+
+let add_sentence (otree, ttree) sentence = 
+  let window = Ngram.empty 3 in
+  let f (window, otree, ttree) (word, gold)  = 
 	let window = Ngram.shift_right window gold in
-    let t = Ngramtree.add t (window) in
-	(window, t)
-  in
-  let (w, t) = List.fold_left (f)  (window, t) sentence in
-  let (w, t) = f  (w,t) ("</s>", "</s>") in
-	t
+    let ot = Ngramtree.add otree (word :: window) in
+	let tt = Ngramtree.add ttree (window) in
+	(window, ot, tt)
+  in 
+  let ttree = Ngramtree.add ttree (window) in
+  let (w, otree, ttree) = List.fold_left (f)  (window, otree, ttree) sentence in
+  let (w,  otree, ttree) = f  (w,otree, ttree) ("</S>", "</s>") in
+	( otree, ttree)
 
 let chan = open_in "szeged.ful.0.test" 
 	(* test.train *) 
 	(* szeged.ful.0.test *)
 
-let rec build_tree t =
-  try 
-    let sentence = Io.read_sentence chan in
-    build_tree (add_sentence t sentence)
-  with End_of_file -> t
+
 
 let _ = 
-  print_string "hello\n";
-  let tree = Ngramtree.empty in
-  Printf.printf "building...\n";
-  let tree = build_tree tree in
+ 
+  let (otree, ttree) = Io.fold_sentence  add_sentence (Ngramtree.empty, Ngramtree.empty) chan in
+(* Ngramtree.print otree; *)
+(* Ngramtree.print ttree; *)
 
-  let print_ngram tree ngram freq =
-	print_int freq; print_char ' ';
-	Ngram.print ngram ;
-	let freqv = Ngramtree.freq ngram tree in
-	  List.iter (fun f -> print_int f; print_char ' ';) freqv ;
-	  print_newline ();
- in
-Ngramtree.print tree;
-(*	Ngramtree.iter (print_ngram tree) 3 tree; *)
-	let lamdas = Deleted_interpolation.calculate_lamdas tree 3 in
-		Array.iteri (fun i v -> Printf.printf "%d = %f\n" i v) lamdas
-(*  Printf.printf "printing...\n";
-  flush stdout;
-  Ngramtree.print tree;
+(* let olamdas = Deleted_interpolation.calculate_lamdas otree ttree 3 in *)
+let tlamdas = Deleted_interpolation.calculate_lamdas ttree ttree 3 in
+	Array.iteri (fun i v -> Printf.printf "%d = %f\n" i v) tlamdas;
+let ptree = Deleted_interpolation.build ttree ttree tlamdas in
+
+
+let check_ngram ngram freq =
+	Ngram.print ngram;
+(*	let prob1=Deleted_interpolation.lprob ptree ngram in *)
+	let left = Ngram.chop_right ngram in
+	let w = List.hd (List.rev ngram) in
+	let prob2=Deleted_interpolation.prob ttree ttree tlamdas left w in
+
+	Printf.printf "%f\n" prob2 
+in
+ 
+	
+	
+Ngramtree.iter check_ngram 3 ttree
+(* 
+Deleted_interpolation.print ptree;	
+*)
+	(*
+Array.iteri (fun i v -> Printf.printf "%d = %f\n" i v) olamdas;
+
+
+let words sentence =
+	List.map (fun (word, gold) -> word) sentence
+in
+
+	
+let chan = open_in "szeged.ful.0.test" in
+let f = ref 0 in 
+let total = ref 0 in
+let tag_sentence sentence =
+let tags = Tagger_hmm.tag otree olamdas ttree tlamdas (words sentence) in	
+
+List.iter2 (fun (word, gold) tag -> Printf.printf "%s\t%s\t%s\n"  word gold tag  ) sentence tags 
+in Io.iter_sentence chan tag_sentence 
 *)
