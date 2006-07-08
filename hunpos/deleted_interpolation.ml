@@ -58,12 +58,12 @@ let calculate_lamdas ntree dtree n =
 		let nom   = List.rev (Ngramtree.freq deleted_ngram  ntree ) in
 		let denom = List.rev (Ngramtree.freq   (Ngram.chop_right deleted_ngram)  dtree) in
         let (_,maxi) =   searchmax (-1.0) (n) 0  nom denom  in
-		lamdas.(maxi) <-lamdas.(maxi) + freq 
+	    lamdas.(maxi) <-lamdas.(maxi) + freq 
 	
 	in
 	let lamdas = Array.create (n+1) 0 in
 	Ngramtree.iter (incrementation lamdas) n ntree;
-
+	lamdas.(n) <- 0;
 	(* normalization *)
     let sum = Array.fold_left (fun sum x -> sum+x) 0 lamdas in
 	Array.map (fun x -> float x /. float sum) lamdas
@@ -110,20 +110,29 @@ let build ntree dtree lamdas =
 			let log_childs = Ngramtree.Cmap.map (fun node -> log_node node) childs in
 			(Node((log p), f2, log_childs))
 		in
-	(* log_node *) root
-
-let rec lprob_aux p_to (Node(p, f2, childs)) ngram =
-		match ngram with 
-			| [] -> p
-			| h::t -> try lprob_aux (p) (Ngramtree.Cmap.find h childs) t with Not_found -> p_to
+	 log_node  root
 
 
-let lprob_lf ptree ngram =
-	lprob_aux 0. ptree ngram
+
+let rec lprob_lf (Node(p, f2, childs)) ngram =
+	match ngram with 
+		| [] -> p
+		| h::t -> try lprob_lf (Ngramtree.Cmap.find h childs) t with Not_found -> p
 	
 let lprob ptree ngram =
-	lprob_aux 0. ptree (List.rev ngram)
+	lprob_lf ptree (List.rev ngram)
 	 
+	
+	(* visszaadja a gyerek node-t*)
+	let child_node tree key = match tree with
+				(Node (f1, f2, childs)) -> try Ngramtree.Cmap.find key childs with Not_found -> empty
+
+
+
+	let edges (Node (p1, p2, childs)) = 
+		Ngramtree.Cmap.fold (fun k v l -> k :: l) childs []
+		
+		
 let print t =
 	let rec print_tree level str (Node (f1, f2, m)) =
 		for i = 1 to level do
@@ -149,12 +158,12 @@ let prob ntree dtree lamdas ngram word =
 	let rec sumup p nom denom i =
 		match (nom, denom) with 
 			(nh::nt, dh::dt) -> 
-
+(*
 				Printf.printf "+ %f %d / %d" lamdas.(i) nh dh ;  
-
+*)
 				let ratio = if nh == 0 || dh == 0 then 0.0 else float (nh)  /. float (dh) in
                 let p = p +. (lamdas.(i) *. ratio)  in
 				sumup p nt dt (succ i)
-			| (_ , _ ) ->  Printf.printf " +%f\n" lamdas.(i);  p +. lamdas.(i)
+			| (_ , _ ) ->  (* Printf.printf " +%f\n" lamdas.(i); *) p +. lamdas.(i)
 	in		
     sumup (0.0) nom denom (0)
