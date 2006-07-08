@@ -19,15 +19,16 @@ let print ngram =
   print_newline();
 ;;
 
+let rec chop_right ngram = match ngram with
+	[] -> []
+	| l :: [] -> []
+	| l :: h -> l :: chop_right h
+	
 let shift_left ngram ne = match ngram with 
 	| []  -> ne :: []
  	| head::tail -> (tail @ (ne :: []))
 
 let shift_right ngram ne = match ngram with
 	| []  -> ne :: []
-	| _ -> ne :: List.rev ( List.tl (List.rev ngram) )
+	| _ -> ne :: (chop_right ngram) 
 	
-let rec chop_right ngram = match ngram with
-	[] -> []
-	| l :: [] -> []
-	| l :: h -> l :: chop_right h
