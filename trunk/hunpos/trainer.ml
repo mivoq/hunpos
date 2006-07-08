@@ -12,7 +12,7 @@ let add_sentence (otree, ttree) sentence =
   let (w,  otree, ttree) = f  (w,otree, ttree) ("</S>", "</s>") in
 	( otree, ttree)
 
-let chan = open_in "szeged.ful.0.test" 
+let chan = open_in "data/szeged.ful.newest.0.train" 
 	(* test.train *) 
 	(* szeged.ful.0.test *)
 
@@ -41,6 +41,6 @@ let pttree = Deleted_interpolation.build ttree ttree tlamdas in
 Printf.eprintf "model is trained.\n";
 Printf.eprintf "saving.\n";
 
-let oc = open_out "trained_modell" in
+let oc = open_out "data/trained_modell" in
 Marshal.to_channel oc (potree, pttree) [];
 close_out oc;
