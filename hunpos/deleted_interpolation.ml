@@ -125,7 +125,7 @@ let lprob ptree ngram =
 	
 	(* visszaadja a gyerek node-t*)
 	let child_node tree key = match tree with
-				(Node (f1, f2, childs)) -> try Ngramtree.Cmap.find key childs with Not_found -> empty
+				(Node (f1, f2, childs)) -> Ngramtree.Cmap.find key childs
 
 
 
