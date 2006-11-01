@@ -19,7 +19,7 @@ let read_sentence chan =
 						(next_tab_pos +1), item
 	
 	in
-		let rec read_sentence empty =   (* hÃ­vhatod ugyanÃºgy a rekurzÃ­v segÃ©dfÃ¼ggvÃ©nyt *)
+		let rec read_sentence empty =   (* hívhatod ugyanúgy a rekurzív segédfüggvényt *)
 			let line =
 				try input_line chan
 				with 
@@ -27,7 +27,7 @@ let read_sentence chan =
 					                | true -> raise End_of_file
 									| false -> ""
 			in
-			let last, word = next_item line 0 in    (* beolvassuk a szÃ³t, ha nincs akkor az end 0 lesz *)
+			let last, word = next_item line 0 in    (* beolvassuk a szót, ha nincs akkor az end 0 lesz *)
 			match word, empty with
 			| "", true -> read_sentence true (* consume redundant newlines if sentence is empty yet *)
 			| "", false -> []                    (* genuine end of non_empty sentence *)
@@ -37,21 +37,26 @@ let read_sentence chan =
 							 next_item line last
 					with _ -> Printf.eprintf "invalid line %d %s\n" last line; failwith "invalid line"
 				in
-				(word, gold) :: read_sentence false (* mÃ¡r tudjuk, hogy nem Ã¼res a mondat *)
+				(word, gold) :: read_sentence false (* már tudjuk, hogy nem üres a mondat *)
 		in
 					read_sentence true
 ;;
 
 (* vegigmegy a chan minden mondatan is atadja az f-nek*)
-let rec iter_sentence chan f =
-try 
-	f (read_sentence chan);
-	iter_sentence chan f
-
-with End_of_file -> ()
+let iter_sentence chan f =
+	let rec loop () = 
+		f (read_sentence chan);
+		loop()
+	in
+	try
+		loop () ;
+	with End_of_file -> ()
 
 ;;
 
+let iter_tokens chan f =
+	iter_sentence chan (List.iter f)
+	
 let rec fold_sentence f a chan =
 	 try
 	 	let sentence = read_sentence chan in

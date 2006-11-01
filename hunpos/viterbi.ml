@@ -65,7 +65,7 @@ let decode start_state observation trans_probs  =
 		
 	  	in
 			let new_nodes = Cmap.fold check_node current_nodes Cmap.empty in
-            Cmap.fold (fun state (Token(w, _, _))  map -> if w < (!max_weight -. (log 10000.)) then Cmap.remove state map else map) new_nodes new_nodes 
+            Cmap.fold (fun state (Token(w, _, _))  map -> if w < (!max_weight -. (log 100.)) then Cmap.remove state map else map) new_nodes new_nodes 
 	in
 	let rec forward observation current_nodes =
 		match observation with
