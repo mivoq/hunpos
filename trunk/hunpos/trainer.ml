@@ -9,7 +9,7 @@ let add_sentence (otree, ttree) sentence =
   in 
   let ttree = Ngramtree.add ttree (window) in
   let (w, otree, ttree) = List.fold_left (f)  (window, otree, ttree) sentence in
-  let (w,  otree, ttree) = f  (w,otree, ttree) ("</S>", "</s>") in
+	  let (w,  otree, ttree) = f  (w,otree, ttree) ("</S>", "</s>") in
 	( otree, ttree)
 
 let chan = open_in "data/szeged.ful.newest.0.train" 

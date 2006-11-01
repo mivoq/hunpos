@@ -13,13 +13,19 @@
 					<key>filename</key>
 					<string>io.ml</string>
 					<key>lastUsed</key>
-					<date>2006-07-03T17:40:08Z</date>
+					<date>2006-09-22T11:51:08Z</date>
+				</dict>
+				<dict>
+					<key>filename</key>
+					<string>Makefile.stat</string>
+					<key>lastUsed</key>
+					<date>2006-09-22T11:49:33Z</date>
 				</dict>
 				<dict>
 					<key>filename</key>
 					<string>Makefile</string>
 					<key>lastUsed</key>
-					<date>2006-07-03T18:57:49Z</date>
+					<date>2006-09-22T11:59:12Z</date>
 					<key>selected</key>
 					<true/>
 				</dict>
@@ -27,55 +33,43 @@
 					<key>filename</key>
 					<string>ngram.ml</string>
 					<key>lastUsed</key>
-					<date>2006-07-02T12:17:52Z</date>
+					<date>2006-09-21T14:14:42Z</date>
 				</dict>
 				<dict>
 					<key>filename</key>
 					<string>ngramtree.ml</string>
 					<key>lastUsed</key>
-					<date>2006-07-02T17:48:43Z</date>
+					<date>2006-09-21T14:14:40Z</date>
 				</dict>
 				<dict>
 					<key>filename</key>
-					<string>trie.ml</string>
+					<string>tag.ml</string>
 					<key>lastUsed</key>
-					<date>2006-06-29T19:20:55Z</date>
-				</dict>
-				<dict>
-					<key>filename</key>
-					<string>buildngramtree.ml</string>
-					<key>lastUsed</key>
-					<date>2006-07-03T11:21:49Z</date>
+					<date>2006-09-21T14:14:40Z</date>
 				</dict>
 				<dict>
 					<key>filename</key>
 					<string>test.ml</string>
 					<key>lastUsed</key>
-					<date>2006-06-30T17:01:29Z</date>
+					<date>2006-09-21T14:14:40Z</date>
 				</dict>
 				<dict>
 					<key>filename</key>
 					<string>viterbi.ml</string>
 					<key>lastUsed</key>
-					<date>2006-07-03T18:57:49Z</date>
+					<date>2006-09-21T14:14:41Z</date>
 				</dict>
 				<dict>
 					<key>filename</key>
 					<string>simple_hmm.ml</string>
 					<key>lastUsed</key>
-					<date>2006-07-02T12:34:15Z</date>
-				</dict>
-				<dict>
-					<key>filename</key>
-					<string>testviterbi.ml</string>
-					<key>lastUsed</key>
-					<date>2006-07-02T12:17:50Z</date>
+					<date>2006-09-21T14:14:40Z</date>
 				</dict>
 				<dict>
 					<key>filename</key>
 					<string>ngram.ml</string>
 					<key>lastUsed</key>
-					<date>2006-07-02T09:34:42Z</date>
+					<date>2006-07-07T16:59:37Z</date>
 				</dict>
 				<dict>
 					<key>children</key>
@@ -89,19 +83,76 @@
 					<key>filename</key>
 					<string>deleted_interpolation.ml</string>
 					<key>lastUsed</key>
-					<date>2006-07-03T11:11:59Z</date>
+					<date>2006-09-21T18:27:00Z</date>
 				</dict>
 				<dict>
 					<key>filename</key>
 					<string>tagger_hmm.ml</string>
 					<key>lastUsed</key>
-					<date>2006-07-02T17:50:50Z</date>
+					<date>2006-09-22T06:46:48Z</date>
 				</dict>
 				<dict>
 					<key>filename</key>
 					<string>theatetest.ml</string>
 					<key>lastUsed</key>
-					<date>2006-07-03T18:54:01Z</date>
+					<date>2006-09-21T14:14:39Z</date>
+				</dict>
+				<dict>
+					<key>filename</key>
+					<string>hunmorph.ml</string>
+					<key>lastUsed</key>
+					<date>2006-09-21T14:14:39Z</date>
+				</dict>
+				<dict>
+					<key>filename</key>
+					<string>stats.ml</string>
+					<key>lastUsed</key>
+					<date>2006-09-21T14:14:41Z</date>
+				</dict>
+				<dict>
+					<key>filename</key>
+					<string>ocamorphWrapper.mli</string>
+					<key>lastUsed</key>
+					<date>2006-09-22T11:44:18Z</date>
+				</dict>
+				<dict>
+					<key>filename</key>
+					<string>ocamorphWrapper.ml</string>
+					<key>lastUsed</key>
+					<date>2006-09-22T11:26:52Z</date>
+				</dict>
+				<dict>
+					<key>children</key>
+					<array>
+						<dict>
+							<key>filename</key>
+							<string>trainguess.ml</string>
+							<key>lastUsed</key>
+							<date>2006-09-22T11:59:12Z</date>
+						</dict>
+						<dict>
+							<key>filename</key>
+							<string>train.ml</string>
+							<key>lastUsed</key>
+							<date>2006-09-22T11:36:10Z</date>
+						</dict>
+						<dict>
+							<key>filename</key>
+							<string>testviterbi.ml</string>
+							<key>lastUsed</key>
+							<date>2006-09-21T14:14:41Z</date>
+						</dict>
+						<dict>
+							<key>filename</key>
+							<string>tagandtest.ml</string>
+							<key>lastUsed</key>
+							<date>2006-09-21T20:01:47Z</date>
+						</dict>
+					</array>
+					<key>expanded</key>
+					<true/>
+					<key>name</key>
+					<string>progs</string>
 				</dict>
 			</array>
 			<key>expanded</key>
@@ -119,73 +170,57 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>0</integer>
+				<integer>20</integer>
 				<key>line</key>
-				<integer>1</integer>
+				<integer>77</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>0</integer>
+			<integer>65</integer>
 		</dict>
-		<key>buildngramtree.ml</key>
+		<key>Makefile.stat</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
 				<integer>0</integer>
 				<key>line</key>
-				<integer>16</integer>
+				<integer>5</integer>
 			</dict>
-			<key>columnSelection</key>
-			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
 			<integer>0</integer>
-			<key>selectFrom</key>
-			<dict>
-				<key>column</key>
-				<integer>39</integer>
-				<key>line</key>
-				<integer>16</integer>
-			</dict>
-			<key>selectTo</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>16</integer>
-			</dict>
 		</dict>
 		<key>deleted_interpolation.ml</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>36</integer>
+				<integer>19</integer>
 				<key>line</key>
-				<integer>75</integer>
+				<integer>96</integer>
 			</dict>
 			<key>columnSelection</key>
 			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>64</integer>
+			<integer>77</integer>
 			<key>selectFrom</key>
 			<dict>
 				<key>column</key>
-				<integer>34</integer>
+				<integer>18</integer>
 				<key>line</key>
-				<integer>75</integer>
+				<integer>96</integer>
 			</dict>
 			<key>selectTo</key>
 			<dict>
 				<key>column</key>
-				<integer>38</integer>
+				<integer>23</integer>
 				<key>line</key>
-				<integer>75</integer>
+				<integer>96</integer>
 			</dict>
 		</dict>
 		<key>io.ml</key>
@@ -193,109 +228,79 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>20</integer>
-				<key>line</key>
-				<integer>25</integer>
-			</dict>
-			<key>columnSelection</key>
-			<false/>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>11</integer>
-			<key>selectFrom</key>
-			<dict>
-				<key>column</key>
-				<integer>2</integer>
-				<key>line</key>
-				<integer>22</integer>
-			</dict>
-			<key>selectTo</key>
-			<dict>
-				<key>column</key>
-				<integer>20</integer>
-				<key>line</key>
-				<integer>25</integer>
-			</dict>
-		</dict>
-		<key>ngram.ml</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>0</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>0</integer>
-		</dict>
-		<key>ngramtree.ml</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>2</integer>
+				<integer>8</integer>
 				<key>line</key>
 				<integer>59</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>49</integer>
+			<integer>43</integer>
 		</dict>
-		<key>simple_hmm.ml</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>23</integer>
-				<key>line</key>
-				<integer>64</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>33</integer>
-		</dict>
-		<key>tagger_hmm.ml</key>
+		<key>ocamorphWrapper.ml</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
 				<integer>2</integer>
 				<key>line</key>
-				<integer>29</integer>
+				<integer>125</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>11</integer>
+			<integer>100</integer>
 		</dict>
-		<key>testviterbi.ml</key>
+		<key>ocamorphWrapper.mli</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
 				<integer>56</integer>
 				<key>line</key>
-				<integer>0</integer>
+				<integer>22</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>0</integer>
+			<integer>19</integer>
 		</dict>
-		<key>theatetest.ml</key>
+		<key>tagandtest.ml</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>18</integer>
+				<integer>63</integer>
 				<key>line</key>
-				<integer>7</integer>
+				<integer>70</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>43</integer>
+		</dict>
+		<key>tagger_hmm.ml</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>1</integer>
+				<key>line</key>
+				<integer>71</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>49</integer>
+		</dict>
+		<key>train.ml</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>25</integer>
+				<key>line</key>
+				<integer>14</integer>
 			</dict>
 			<key>columnSelection</key>
 			<false/>
@@ -306,50 +311,49 @@
 			<key>selectFrom</key>
 			<dict>
 				<key>column</key>
-				<integer>10</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>7</integer>
+				<integer>0</integer>
 			</dict>
 			<key>selectTo</key>
 			<dict>
 				<key>column</key>
-				<integer>18</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>7</integer>
+				<integer>46</integer>
 			</dict>
 		</dict>
-		<key>viterbi.ml</key>
+		<key>trainguess.ml</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>25</integer>
+				<integer>55</integer>
 				<key>line</key>
-				<integer>32</integer>
+				<integer>23</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>25</integer>
+			<integer>2</integer>
 		</dict>
 	</dict>
 	<key>openDocuments</key>
 	<array>
-		<string>deleted_interpolation.ml</string>
-		<string>simple_hmm.ml</string>
-		<string>Makefile</string>
-		<string>ngramtree.ml</string>
-		<string>buildngramtree.ml</string>
-		<string>theatetest.ml</string>
-		<string>io.ml</string>
 		<string>tagger_hmm.ml</string>
-		<string>viterbi.ml</string>
-		<string>testviterbi.ml</string>
-		<string>ngram.ml</string>
+		<string>ocamorphWrapper.ml</string>
+		<string>train.ml</string>
+		<string>trainguess.ml</string>
+		<string>Makefile.stat</string>
+		<string>Makefile</string>
+		<string>ocamorphWrapper.mli</string>
+		<string>io.ml</string>
+		<string>tagandtest.ml</string>
+		<string>deleted_interpolation.ml</string>
 	</array>
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{237, 131}, {1036, 679}}</string>
+	<string>{{473, 146}, {856, 585}}</string>
 </dict>
 </plist>
