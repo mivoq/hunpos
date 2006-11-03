@@ -1,6 +1,6 @@
 
 
-let chan = open_in "data/szeged.ful.newest.0.test" 
+let chan = open_in "data/szeged.ful.newest.0.train" 
 	(* test.train *) 
 	(* szeged.ful.0.test *)
 
@@ -11,7 +11,7 @@ let tokens = ref 0
 	
 let oov    = ref 0	
 
-let guesstree = ref Ngramtree.empty
+let mem =  Maxent.create ()
 
 
 let token (word, gold) =
@@ -20,22 +20,18 @@ let token (word, gold) =
 	if OcamorphWrapper.oov anal then begin
 	(* csak oov szavakkal foglalkozunk *)
 		incr (oov);
-		Printf.printf "%s " word;
-		let tags =  String.concat "/" (List.sort compare (OcamorphWrapper.tags anal)) in
-		guesstree := Ngramtree.add !guesstree (gold::tags::[])
+		Printf.printf "%s\n" word;
+		Maxent.add_event mem (OcamorphWrapper.tags anal) gold 1 ;
 
 	end
 ;;
 
 let _ = 
 			
-Printf.eprintf "building guess tree\n";
+Printf.eprintf "extracting features\n";
 Io.iter_tokens chan token ;
-Printf.eprintf "saving guess tree\n";
 
-let oc = open_out "data/guessed_tree" in
-Marshal.to_channel oc (!guesstree) [];
-close_out oc;
+Maxent.train mem ;
 
 Printf.eprintf "saving cache\n";
 OcamorphWrapper.save_cache morph
