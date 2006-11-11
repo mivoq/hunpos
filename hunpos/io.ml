@@ -42,6 +42,39 @@ let read_sentence chan =
 					read_sentence true
 ;;
 
+
+let read_sentence_no_split chan =
+		let rec read_sentence empty =   (* hívhatod ugyanúgy a rekurzív segédfüggvényt *)
+			let line =
+				try input_line chan
+				with 
+				 End_of_file -> match empty with
+					                | true -> raise End_of_file
+									| false -> ""
+			in
+		
+			match String.length line, empty with
+			| 0, true -> read_sentence true (* consume redundant newlines if sentence is empty yet *)
+			| 0, false -> []                    (* genuine end of non_empty sentence *)
+			| _, _ ->                           (* next real item *)
+				line:: read_sentence false (* már tudjuk, hogy nem üres a mondat *)
+		in
+					read_sentence true
+;;
+
+(* vegigmegy a chan minden mondatan is atadja az f-nek*)
+let iter_sentence_no_split chan f =
+	let rec loop () = 
+		f (read_sentence_no_split chan);
+		loop()
+	in
+	try
+		loop () ;
+	with End_of_file -> ()
+
+;;
+
+
 (* vegigmegy a chan minden mondatan is atadja az f-nek*)
 let iter_sentence chan f =
 	let rec loop () = 
