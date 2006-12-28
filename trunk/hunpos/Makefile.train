@@ -1,0 +1,14 @@
+OCAMLMAKEFILE = ../../OCamlMakefile
+
+SOURCES = io.ml   ngram.ml ngramtree.ml deleted_interpolation.ml train.ml
+
+RESULT = train
+
+
+export OCAMLNCFLAGS := -unsafe 
+#-inline 100 
+all: profiling-native-code
+#all: profiling-byte-code
+
+include $(OCAMLMAKEFILE)
+

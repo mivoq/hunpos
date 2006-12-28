@@ -3,372 +3,191 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>ocamorphWrapper.ml</string>
+	<string>src/hunpos/testguess.ml</string>
 	<key>documents</key>
 	<array>
 		<dict>
-			<key>children</key>
-			<array>
-				<dict>
-					<key>filename</key>
-					<string>io.ml</string>
-					<key>lastUsed</key>
-					<date>2006-09-22T11:51:08Z</date>
-				</dict>
-				<dict>
-					<key>filename</key>
-					<string>Makefile.stat</string>
-					<key>lastUsed</key>
-					<date>2006-11-01T18:22:24Z</date>
-				</dict>
-				<dict>
-					<key>filename</key>
-					<string>Makefile</string>
-					<key>lastUsed</key>
-					<date>2006-11-01T18:38:00Z</date>
-				</dict>
-				<dict>
-					<key>filename</key>
-					<string>ngram.ml</string>
-					<key>lastUsed</key>
-					<date>2006-09-21T14:14:42Z</date>
-				</dict>
-				<dict>
-					<key>filename</key>
-					<string>ngramtree.ml</string>
-					<key>lastUsed</key>
-					<date>2006-09-21T14:14:40Z</date>
-				</dict>
-				<dict>
-					<key>filename</key>
-					<string>tag.ml</string>
-					<key>lastUsed</key>
-					<date>2006-09-21T14:14:40Z</date>
-				</dict>
-				<dict>
-					<key>filename</key>
-					<string>test.ml</string>
-					<key>lastUsed</key>
-					<date>2006-09-21T14:14:40Z</date>
-				</dict>
-				<dict>
-					<key>filename</key>
-					<string>viterbi.ml</string>
-					<key>lastUsed</key>
-					<date>2006-09-21T14:14:41Z</date>
-				</dict>
-				<dict>
-					<key>filename</key>
-					<string>simple_hmm.ml</string>
-					<key>lastUsed</key>
-					<date>2006-09-21T14:14:40Z</date>
-				</dict>
-				<dict>
-					<key>filename</key>
-					<string>ngram.ml</string>
-					<key>lastUsed</key>
-					<date>2006-07-07T16:59:37Z</date>
-				</dict>
-				<dict>
-					<key>children</key>
-					<array/>
-					<key>expanded</key>
-					<true/>
-					<key>name</key>
-					<string>untitled group</string>
-				</dict>
-				<dict>
-					<key>filename</key>
-					<string>deleted_interpolation.ml</string>
-					<key>lastUsed</key>
-					<date>2006-09-21T18:27:00Z</date>
-				</dict>
-				<dict>
-					<key>filename</key>
-					<string>tagger_hmm.ml</string>
-					<key>lastUsed</key>
-					<date>2006-09-22T06:46:48Z</date>
-				</dict>
-				<dict>
-					<key>filename</key>
-					<string>theatetest.ml</string>
-					<key>lastUsed</key>
-					<date>2006-09-21T14:14:39Z</date>
-				</dict>
-				<dict>
-					<key>filename</key>
-					<string>hunmorph.ml</string>
-					<key>lastUsed</key>
-					<date>2006-11-01T18:26:06Z</date>
-				</dict>
-				<dict>
-					<key>filename</key>
-					<string>stats.ml</string>
-					<key>lastUsed</key>
-					<date>2006-09-21T14:14:41Z</date>
-				</dict>
-				<dict>
-					<key>filename</key>
-					<string>ocamorphWrapper.mli</string>
-					<key>lastUsed</key>
-					<date>2006-11-01T18:16:17Z</date>
-				</dict>
-				<dict>
-					<key>filename</key>
-					<string>ocamorphWrapper.ml</string>
-					<key>lastUsed</key>
-					<date>2006-11-01T19:02:45Z</date>
-					<key>selected</key>
-					<true/>
-				</dict>
-				<dict>
-					<key>children</key>
-					<array>
-						<dict>
-							<key>filename</key>
-							<string>trainguess.ml</string>
-							<key>lastUsed</key>
-							<date>2006-11-01T19:02:45Z</date>
-						</dict>
-						<dict>
-							<key>filename</key>
-							<string>train.ml</string>
-							<key>lastUsed</key>
-							<date>2006-11-01T19:00:33Z</date>
-						</dict>
-						<dict>
-							<key>filename</key>
-							<string>testviterbi.ml</string>
-							<key>lastUsed</key>
-							<date>2006-09-21T14:14:41Z</date>
-						</dict>
-						<dict>
-							<key>filename</key>
-							<string>tagandtest.ml</string>
-							<key>lastUsed</key>
-							<date>2006-09-21T20:01:47Z</date>
-						</dict>
-					</array>
-					<key>expanded</key>
-					<true/>
-					<key>name</key>
-					<string>progs</string>
-				</dict>
-			</array>
-			<key>expanded</key>
+			<key>filename</key>
+			<string>src/hunpos/Makefile.trainguess</string>
+			<key>lastUsed</key>
+			<date>2006-11-17T13:09:33Z</date>
+		</dict>
+		<dict>
+			<key>filename</key>
+			<string>src/hunpos/Makefile</string>
+			<key>lastUsed</key>
+			<date>2006-11-16T22:02:26Z</date>
+		</dict>
+		<dict>
+			<key>filename</key>
+			<string>src/ocamaxent/stub.cc</string>
+			<key>lastUsed</key>
+			<date>2006-11-17T08:09:27Z</date>
+		</dict>
+		<dict>
+			<key>filename</key>
+			<string>src/ocamaxent/maxent.ml</string>
+			<key>lastUsed</key>
+			<date>2006-11-17T13:18:35Z</date>
+		</dict>
+		<dict>
+			<key>filename</key>
+			<string>src/hunpos/testguess.ml</string>
+			<key>lastUsed</key>
+			<date>2006-11-17T13:18:38Z</date>
+			<key>selected</key>
 			<true/>
-			<key>name</key>
-			<string>untitled group</string>
+		</dict>
+		<dict>
+			<key>filename</key>
+			<string>src/hunpos/trainguess.ml</string>
+			<key>lastUsed</key>
+			<date>2006-11-17T13:18:36Z</date>
+		</dict>
+		<dict>
+			<key>filename</key>
+			<string>src/hunpos/ocamorphWrapper.ml</string>
+			<key>lastUsed</key>
+			<date>2006-11-17T13:18:38Z</date>
+		</dict>
+		<dict>
+			<key>filename</key>
+			<string>src/hunpos/ocamorphWrapper.mli</string>
+			<key>lastUsed</key>
+			<date>2006-11-17T07:53:21Z</date>
 		</dict>
 	</array>
 	<key>fileHierarchyDrawerWidth</key>
 	<integer>200</integer>
 	<key>metaData</key>
 	<dict>
-		<key>Makefile</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>29</integer>
-				<key>line</key>
-				<integer>74</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>85</integer>
-		</dict>
-		<key>Makefile.stat</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>5</integer>
-			</dict>
-			<key>columnSelection</key>
-			<false/>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>0</integer>
-			<key>selectFrom</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>0</integer>
-			</dict>
-			<key>selectTo</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>14</integer>
-			</dict>
-		</dict>
-		<key>deleted_interpolation.ml</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>19</integer>
-				<key>line</key>
-				<integer>96</integer>
-			</dict>
-			<key>columnSelection</key>
-			<false/>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>77</integer>
-			<key>selectFrom</key>
-			<dict>
-				<key>column</key>
-				<integer>18</integer>
-				<key>line</key>
-				<integer>96</integer>
-			</dict>
-			<key>selectTo</key>
-			<dict>
-				<key>column</key>
-				<integer>23</integer>
-				<key>line</key>
-				<integer>96</integer>
-			</dict>
-		</dict>
-		<key>hunmorph.ml</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>0</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>4</integer>
-		</dict>
-		<key>io.ml</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>8</integer>
-				<key>line</key>
-				<integer>59</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>43</integer>
-		</dict>
-		<key>ocamorphWrapper.ml</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>54</integer>
-				<key>line</key>
-				<integer>33</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>72</integer>
-		</dict>
-		<key>ocamorphWrapper.mli</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>56</integer>
-				<key>line</key>
-				<integer>22</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>19</integer>
-		</dict>
-		<key>tagandtest.ml</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>63</integer>
-				<key>line</key>
-				<integer>70</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>43</integer>
-		</dict>
-		<key>tagger_hmm.ml</key>
+		<key>src/hunpos/Makefile</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
 				<integer>1</integer>
 				<key>line</key>
-				<integer>71</integer>
+				<integer>5</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>49</integer>
+			<integer>0</integer>
 		</dict>
-		<key>train.ml</key>
+		<key>src/hunpos/Makefile.trainguess</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>115</integer>
+				<key>line</key>
+				<integer>2</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>0</integer>
+		</dict>
+		<key>src/hunpos/ocamorphWrapper.ml</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>27</integer>
+				<key>line</key>
+				<integer>51</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>32</integer>
+		</dict>
+		<key>src/hunpos/ocamorphWrapper.mli</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
 				<integer>0</integer>
 				<key>line</key>
-				<integer>18</integer>
+				<integer>52</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>0</integer>
+			<integer>17</integer>
 		</dict>
-		<key>trainguess.ml</key>
+		<key>src/hunpos/testguess.ml</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>37</integer>
+				<integer>2</integer>
 				<key>line</key>
-				<integer>22</integer>
+				<integer>30</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>19</integer>
+		</dict>
+		<key>src/hunpos/trainguess.ml</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>69</integer>
+				<key>line</key>
+				<integer>2</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
 			<integer>0</integer>
 		</dict>
+		<key>src/ocamaxent/maxent.ml</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>42</integer>
+				<key>line</key>
+				<integer>11</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>0</integer>
+		</dict>
+		<key>src/ocamaxent/stub.cc</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>47</integer>
+				<key>line</key>
+				<integer>83</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>49</integer>
+		</dict>
 	</dict>
 	<key>openDocuments</key>
 	<array>
-		<string>tagger_hmm.ml</string>
-		<string>ocamorphWrapper.ml</string>
-		<string>train.ml</string>
-		<string>trainguess.ml</string>
-		<string>hunmorph.ml</string>
-		<string>Makefile.stat</string>
-		<string>Makefile</string>
-		<string>ocamorphWrapper.mli</string>
-		<string>io.ml</string>
-		<string>tagandtest.ml</string>
-		<string>deleted_interpolation.ml</string>
+		<string>src/hunpos/ocamorphWrapper.ml</string>
+		<string>src/hunpos/ocamorphWrapper.mli</string>
+		<string>src/hunpos/trainguess.ml</string>
+		<string>src/hunpos/testguess.ml</string>
+		<string>src/ocamaxent/maxent.ml</string>
+		<string>src/ocamaxent/stub.cc</string>
+		<string>src/hunpos/Makefile</string>
+		<string>src/hunpos/Makefile.trainguess</string>
 	</array>
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{-32, 53}, {856, 578}}</string>
+	<string>{{507, 300}, {856, 578}}</string>
 </dict>
 </plist>

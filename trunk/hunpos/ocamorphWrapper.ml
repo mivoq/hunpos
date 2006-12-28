@@ -2,11 +2,10 @@
 
 module SMap = Map.Make(String)
 module SSet = Set.Make(String)
-(* elemzesek inf_tag=ekbol es a hozzajuk tartozo teljes elemzestbol allnak *)
-type analysis = ( (SSet.t) SMap.t * bool *  bool)
 
-(* ez nem kene, ha az ocamorph interfesze tartalmazna a sajat elemzo fuggvenyenek a tipusat*)
-type analt = (string -> (int * string list))
+type analysis = ( (string * string * string ) list * bool)
+
+type analt = (string -> (bool * (string list)))
 
 (* tartunk egy hashtablat, amibe minden elemzest berakjuk, durva cache*)
 type analyzer = ( analt *  (string, analysis) Hashtbl.t)
@@ -23,107 +22,148 @@ let load_cache () = try
 	cache
 	with Sys_error(_) -> 
 	Hashtbl.create 1000 
-	
-	
+
+
+(* erre szuksegunk lesz: egy listabol kiszuri az ugyanolyan elemeket. Rendezi a listat, majd
+    vegigmegy az elemeken es atmasolja egy uj listaba az unikusakat *)
+let unique l =
+    let rec aux last output input  = match input with
+        [] -> output
+      | head :: tail -> if last = head then (aux last output tail ) else (aux head (head::output) tail)
+    in
+    match (List.sort compare l) with 
+        [] -> l
+    |   head::tail -> aux head (head::[]) tail
+    
+    
+(* kiszedi a hunmorph bemenetebol azokat a karaktereket, amik miatt kesobb nem tudnank parszolni
+    a KR kodot. 3+2 bemenet eseten a kimenet -> 3+2?NUM, ami majdnem osszetettszonak nez ki *)
+let normalize word =
+    let len = String.length word in
+    let output = String.create len in
+    for i = 0 to len - 1 do
+        String.set output i(
+        let c = String.get word i  in
+        match c with
+         | '?' | '/' | '<' | '>' | '+' -> '_'
+         | _ -> c
+        )
+    done;
+(*	print_endline output; *)
+    output
+    
+(* egy sajat elemzo fuggvenyt allitunk elo, remelve, hogy az ocamorph csinal currying-et *)
+
+let create_analyzer bin_file =
+     let engine = Analysis.make_marshal bin_file  in
+     (* harom fuggvenyt hivunk majd egymas utan. 
+        az elso a sima szavak: nem osszetett ismert szo *)
+        
+     (* / stop_at_first    0 1 for indexing
+        // blocking         0 1
+        // compounds        0 1
+        // guess            0 1 2 *)
+    
+    let basic_anal = match (engine false true false Analysis.NoGuess) with
+        Analysis.Analyzer (f)-> f
+        | _ -> failwith (" inkompatibilis ocamorph: stemmert adott vissza") 
+    in  
+    
+    (* ha majd nem ad eredmenyt az elozo, akkor megengedjuk az osszetettszot *)
+    
+    let compound_anal = match (engine false true true Analysis.NoGuess) with
+        Analysis.Analyzer (f)-> f
+        | _ -> failwith (" inkompatibilis ocamorph: stemmert adott vissza") 
+    in  
+        
+    (* guesser uzemmodban viszont nem erdekel most minket az osszetett szo:
+       faxnigép?/NOUN
+       faxni?NOUN+gép/NOUN
+       csak az elso kell    
+     *)
+    
+    let guesser = match (engine false true false Analysis.Global) with 
+        Analysis.Analyzer (f)-> f
+        | _ -> failwith (" inkompatibilis ocamorph: stemmert adott vissza") 
+    in  
+        
+    (* es akkor a komponalt fuggvenyunk *)
+    
+    fun word -> (* eloszor is kiszedjuk a zavaro karaktereket *)
+                let word = normalize word in
+                let (_, res) = basic_anal word in
+                if List.length res > 0 then (false, unique res) else
+                let (_, res) = compound_anal word in
+                if List.length res > 0 then (false, unique res) else
+                let (_, res) = (guesser word) in (true, unique res)
+
+		
 let init () = 
 	let bin_file = ref "/Users/hp/work/cvs/lexicons/morphdb.hu/out/morphdb_hu.bin" in 
   (* / stop_at_first    0 1 for indexing
     // blocking         0 1
     // compounds        0 1
     // guess            0 1 2 *)
-    let a = Analysis.make_marshal !bin_file false true true Analysis.Fallback in
-   	match a with
-    	Analysis.Analyzer (f)-> 
-			let cache = load_cache () in
-							(f, cache)
-		| _ -> failwith (" inkompatibilis ocamorph: stemmert adott vissza") 
+    (create_analyzer !bin_file, load_cache () )
 
-(** egyszeru heurisztikaval szuri az elemzeseket, es melle teszi, hogy
-	hogy osszetett szo-e es/vagy guessed-e, lehet a ketto egyszerre. *)
-let filter_anals anals = 
-	let annotate_anal anal = 
-		let m = String.length anal - 1 in
-		(* ha van benne plusz akkor compound, ha van benne ? akkor guessed *)
-		let rec aux  i compound guessed =
-			if i = m then (compound, guessed) else
-			if compound && guessed then (true, true)  (* mar nem kell tovabb menni *) else
-            let compound = if compound then true else  anal.[i] = '+' in
-			let guessed  = if guessed  then true else  anal.[i] = '?' in
-			aux (succ i) compound guessed
-		in
-		let (compound, guessed) = aux 0 false false in
-		(anal, compound, guessed)
-	in
-	let annotated = List.map annotate_anal anals in
-	match annotated with
-	h :: [] -> annotated (* gyorsitas, ha csak egy elemzes van, akkor nem rugozunk *)
-	| _ ->
-		 let isnotguessed  (_, _, guessed) = not guessed in 
-   		 let isbasic (_, compounds, guessed) = not guessed && not compounds in
-         if List.exists isbasic annotated  then List.filter isbasic annotated  else
-   		 if List.exists isnotguessed annotated   then List.filter isnotguessed annotated  else annotated
 
-(* visszaadja az elemzes tag reszet *)
-let get_tag anal =
-	let rec get_pos_sep_index a i = 
-	        if i < 0 then 0 else if (a.[i] = '/' || a.[i] = '?') then i else get_pos_sep_index a (i-1)
-	in
+(* szetvagja az elemzest a lemmara es szufixxumokat helyettesito KR kodolt elemzesekre.
+	majdnem jo, mert az osszetettszavaknal benne hagyja a + jelet es a nem utolso komponens
+	POS kodjait.
+*)
+let split_anal anal =
+(*	print_string "splitting: " ; print_endline anal;*)
 	let l = String.length anal in
-    let i = get_pos_sep_index anal (l - 1) in 
+	(* az utolso osszetettszo hatar *)
+	let p = try String.rindex  anal '+' with Not_found -> 0 in
+	(* ezutani elso / v. ? jel *)
+	let s = try String.index_from anal p  '/' with Not_found -> l in
+	let q = try String.index_from anal p '?' with Not_found -> l in
+
+	let i = min s q in
 	let tag = String.sub anal (i+1) (l -i - 1) in
-
-	tag
-	
-
+    let remained = String.sub anal 0 (i) in (* nem i+1, mert a / jel nem kell sehova sem*)
+	(remained,tag)
 
 let analyze ((hanal,  cache):analyzer) word =
 
 	(* ha a cache-ben benne, akkor visszaadjuk *)
 	try Hashtbl.find cache word  with Not_found ->
 	(*	print_string "not found " ; print_endline word; *)
-	
+
 	(* egyebkent, ugye elemzes *)
-	let (_, anals) = hanal (String.copy word) in
-	(* fallback szures es annotalas*)
-    let filtered_anals = filter_anals anals in	
-	(*
-	let (ha, hc, hg)::t =  filtered_anals in
-    let isbasic = not (List.fold_left (fun   b (_, c, g) ->( b || c || g)) (hc || hg) t) in
-	let iscom =  (List.fold_left (fun   b (_, c, g) ->( b && (hc && (not hg)))) (hc && (not hg)) t) in
-	let isgus =  (List.fold_left (fun   b (_, c, g) ->( b && hg)) (hg) t) in	
-	Printf.printf "%s basic: %B com: %B gus: %B\n" word isbasic iscom isgus;
-	*)		
-	let add_anal  (anals, ocompounds, oguess) (anal, compound, guessed) =
-		(* egy map, amiben
-			 mindden taghez tartozo elemzesek Set-je van *)
-		let tag = get_tag anal in
-		let fulanals = try SMap.find  tag anals with Not_found -> SSet.empty in
-		let fulanals = SSet.add  anal fulanals in
-		(SMap.add  tag  fulanals anals, compound, guessed)
+	let (guessed,  anals) =  (hanal (String.copy word)) in
+    let res = List.map (fun anal -> let s,p = split_anal anal in (s, p, anal)) anals in
+	Hashtbl.add cache word (res,guessed) ;
+	(res,guessed)
+
+let tags (anals,_) =
+    let set = List.fold_left (fun set (_,p, _)  -> SSet.add p set) (SSet.empty) anals  in
+	SSet.fold (fun s l -> s :: l) set []
+
+
+let oov (_,  guessed) =guessed
+
+(* visszaadja a szo lemmait es a hozzatartozo lehetseges suffixomokat (elemzeseket) *)
+let lemmas_with_suffixes (anals, _) =
+    let map = List.fold_left (fun map (s, p,_)  -> 
+									let l = try SMap.find s map with Not_found -> [] in 
+									SMap.add  s (p::l) map) 
+							 (SMap.empty) anals  
 	in
-    let anals = List.fold_left add_anal (SMap.empty, false, false)   filtered_anals in
-    Hashtbl.replace cache word anals ;
-	anals
 
-let tags (tagmap, compunds, guess) =
-	SMap.fold (fun k a tags -> k::tags ) tagmap []
-	
-let oov (_, _, guess) =guess
+	SMap.fold (fun lemma suffixes res -> (lemma, suffixes) :: res ) map []
 
-let compound (_, c, _) = c
-	
-(* adott taghez tartozo elemzesek *)
-let full_analyses ((tagmap, _, _):analysis) tag =
-	let faset = SMap.find  tag tagmap in
-    SSet.fold (fun k l-> k::l)  faset [] 
-(*	 
+(*
 let _ =
 let h = init () in
 Io.iter_tokens (open_in "test.train") (fun (word, gold) -> 
-	 let a = analyze h word in Printf.printf "%s\t%B %B\n" word (compound a) (oov a)) ;
-
-save_cache h
+let a = analyze h word in 
+	(*
+	print_string word ; print_char ' ' ; print_endline (String.concat "#" (tags a)) ;
+*)
+    List.iter (fun (l,sufs) -> print_string l ; print_char ' '; print_endline (String.concat "$" sufs)) (lemmas_with_suffixes a)
+)
+;		
+	
 *)	
-	(* 759 basic: false com: false gus: true
-	 904 basic: false com: true gus: false
-	14947 basic: true com: false gus: false*)		

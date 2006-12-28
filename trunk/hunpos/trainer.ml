@@ -12,13 +12,21 @@ let add_sentence (otree, ttree) sentence =
 	  let (w,  otree, ttree) = f  (w,otree, ttree) ("</S>", "</s>") in
 	( otree, ttree)
 
-let chan = open_in "data/szeged.ful.newest.0.train" 
+let usage () = 
+	Printf.eprintf "usage : %s corpusfile modelfile \n" Sys.argv.(0)
+;;
+
+let _ =	
+if (Array.length Sys.argv) < 3 then 
+	let _ = usage () in	exit 1 
+else
+	
+let chan = open_in Sys.argv.(1) in
 	(* test.train *) 
 	(* szeged.ful.0.test *)
 
 
 
-let _ = 
 Printf.eprintf "building frequency trees\n";
 let (otree, ttree) = Io.fold_sentence  add_sentence (Ngramtree.empty, Ngramtree.empty) chan in
 (* Ngramtree.print otree; *)
@@ -41,6 +49,6 @@ let pttree = Deleted_interpolation.build ttree ttree tlamdas in
 Printf.eprintf "model is trained.\n";
 Printf.eprintf "saving.\n";
 
-let oc = open_out "data/trained_modell" in
+let oc = open_out Sys.argv.(2) in
 Marshal.to_channel oc (potree, pttree) [];
 close_out oc;
