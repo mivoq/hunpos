@@ -1,0 +1,14 @@
+OCAMLMAKEFILE = ../../OCamlMakefile
+
+SOURCES = io.ml   ngram.ml ngramtree.ml deleted_interpolation.ml viterbi.ml morphtable.ml  tagger_hmm.ml tagandtest.ml
+
+RESULT = tagandtest
+
+
+export OCAMLNCFLAGS := -unsafe 
+#-inline 100 
+all: profiling-native-code
+#all: profiling-byte-code
+
+include $(OCAMLMAKEFILE)
+

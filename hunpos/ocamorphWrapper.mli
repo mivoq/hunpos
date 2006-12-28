@@ -30,12 +30,14 @@ val save_cache : analyzer -> unit
 	van, akkor üres cache-el indul.
 	
 	*)
+
 val init : unit -> analyzer
 
 (** Elemzi a szót. A visszaadott elemzést közvetlenül semmire nem lehet használni. Lásd a tags, oov stb.
 	függvényeket.
 	*)
 val analyze : analyzer -> string -> analysis
+
 
 (** Visszaadja az elemzett szó lehetséges cimkéit.
 	*)
@@ -45,7 +47,11 @@ val tags : analysis -> string list
 	*)
 val oov : analysis -> bool
 
+(** Az elemzes oly modon rendezve, hogy egy listaban vannak a lemmak, amikhez listaban ott vannak az elemzesek.
+	*)
+val  lemmas_with_suffixes : analysis -> (string * string list) list
+
 (** 
 	@raise Not_found Ha az adott taghez nincs is elemzes.
 	*)
-val full_analyses : analysis -> string -> string list
+(*val full_analyses : analysis -> string -> string list*)

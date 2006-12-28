@@ -8,15 +8,10 @@ external load: string->maxent_model = "maxent_load"
 external eval: maxent_model->string list -> string -> float = "maxent_eval"
 external eval_all:maxent_model->string list->(string*float) list ="maxent_eval_all"
 
-let _ =
-	let m = create () in
-	add_event m ("haps"::"hups"::[]) "NOUN" 2;
-		add_event m ("haps"::"hips"::[]) "VERB" 2;
-	let _ = train m in
-	save m "vacak";
-	let m = load "vacak" in
-	let c = "hups"::"hips"::[] in
-	print_float (eval m c "NOUN"); print_newline ();
-	let fl = eval_all m c in
-	List.iter (fun (s,p) -> Printf.printf "%s %f\n" s p ) fl;
-	
+let sort_outcomes outcomes = 
+	let comp (o1,( p1:float)) (o2, (p2:float)) = 
+		if p1 < p2 then 1 
+		else if p2 < p1 then -1 
+		else 0
+	in	
+	List.sort comp outcomes

@@ -63,7 +63,7 @@ let calculate_lamdas ntree dtree n =
 	in
 	let lamdas = Array.create (n+1) 0 in
 	Ngramtree.iter (incrementation lamdas) n ntree;
-	lamdas.(n) <- 0;
+(*	lamdas.(n) <- 0;*)
 	(* normalization *)
     let sum = Array.fold_left (fun sum x -> sum+x) 0 lamdas in
 	Array.map (fun x -> float x /. float sum) lamdas

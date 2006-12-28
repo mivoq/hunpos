@@ -1,4 +1,4 @@
-OCAMLMAKEFILE = OCamlMakefile
+OCAMLMAKEFILE = ../../OCamlMakefile
 
 SOURCES = stub.cc maxent.ml
 RESULT  = maxent

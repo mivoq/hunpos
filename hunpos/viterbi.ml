@@ -19,8 +19,8 @@ module Make (OrderedState : Map.OrderedType) = struct
     type st = OrderedState.t
 	
 
-(* start utÃ¡n minden csomÃ³pontrÃ³l feljegyezzÃ¼k az addigi sÃºlyt Ã©s
-	hogy honnan mentÃ¼nk oda
+(* start után minden csomópontról feljegyezzük az addigi súlyt és
+	hogy honnan mentünk oda
 	*)
 type  node = Start |  Token of float * st * node 
 
@@ -65,7 +65,9 @@ let decode start_state observation trans_probs  =
 		
 	  	in
 			let new_nodes = Cmap.fold check_node current_nodes Cmap.empty in
-            Cmap.fold (fun state (Token(w, _, _))  map -> if w < (!max_weight -. (log 100.)) then Cmap.remove state map else map) new_nodes new_nodes 
+          (*	Printf.printf "new nodes: %d \n" (Cmap.fold (fun k d n -> n+1)   new_nodes 0);*)
+			
+  			Cmap.fold (fun state (Token(w, _, _))  map -> if w < (!max_weight -. (log 100000.)) then Cmap.remove state map else map) new_nodes new_nodes 
 	in
 	let rec forward observation current_nodes =
 		match observation with
