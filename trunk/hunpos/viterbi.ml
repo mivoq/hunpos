@@ -30,7 +30,7 @@ let decode start_state observation trans_probs  =
 	(* egy lepes elore: a current_node-okbol hova lehet eljutni? *)
 	let step_forward o current_nodes =
 		let transition_fun = trans_probs o in
-		let max_weight = ref (log 0.) in
+		let max_weight = ref neg_infinity in
 		
 	
 		let check_node  from_state from_node new_nodes =	
@@ -67,7 +67,7 @@ let decode start_state observation trans_probs  =
 			let new_nodes = Cmap.fold check_node current_nodes Cmap.empty in
           (*	Printf.printf "new nodes: %d \n" (Cmap.fold (fun k d n -> n+1)   new_nodes 0);*)
 			
-  			Cmap.fold (fun state (Token(w, _, _))  map -> if w < (!max_weight -. (log 100000.)) then Cmap.remove state map else map) new_nodes new_nodes 
+  			Cmap.fold (fun state (Token(w, _, _))  map -> if w < (!max_weight -. (log 1000.)) then Cmap.remove state map else map) new_nodes new_nodes 
 	in
 	let rec forward observation current_nodes =
 		match observation with

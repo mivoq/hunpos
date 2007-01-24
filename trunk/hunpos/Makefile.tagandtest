@@ -1,13 +1,15 @@
 OCAMLMAKEFILE = ../../OCamlMakefile
 
-SOURCES = io.ml   ngram.ml ngramtree.ml deleted_interpolation.ml viterbi.ml morphtable.ml  tagger_hmm.ml tagandtest.ml
+SOURCES = ../../../lm/parse.ml io.ml   ngram.ml   ../../../lm/amap.ml ../../../lm/mfhash.ml  ../../../lm/logmath.ml ../../../lm/vocab.ml   ../../../lm/trie.ml  ngramtree2.ml
+
+#SOURCES = ../../../lm/parse.ml io.ml   ngram.ml  deleted_interpolation.ml #viterbi.ml morphtable.ml ../../../lm/amap.ml ../../../lm/mfhash.ml  #../../../lm/logmath.ml ../../../lm/vocab.ml  ../../../lm/arpa_reader.ml #../../../lm/trie.ml ../../../lm/ngramLM.ml  ngramtree2.ml #../../../lm/lmclassifier.ml tagger_hmm.ml guess.ml
+# tagandtest.ml
 
 RESULT = tagandtest
 
-
-export OCAMLNCFLAGS := -unsafe 
-#-inline 100 
-all: profiling-native-code
+PACKS=Str
+export OCAMLNCFLAGS := -unsafe -inline 100 
+all: native-code
 #all: profiling-byte-code
 
 include $(OCAMLMAKEFILE)

@@ -1,4 +1,4 @@
-
+(*
 let read_sentence chan = 
 	(* returns the next field of the TAB separated line and the next character 
 		pos after the field *)
@@ -75,6 +75,32 @@ let iter_sentence_no_split chan f =
 ;;
 
 
+*)
+let read_sentence chan =
+	let rec aux wacc tacc read=
+		try 
+		match Parse.split2 '\t' (input_line chan) with
+			word :: r when (String.length word) > 0 -> 
+				let gold = match r with
+					x :: r -> x
+					| _ -> ""
+				in
+				aux (word :: wacc) (gold::tacc) true
+			| _ -> (wacc, tacc)
+		with End_of_file -> if read then (wacc, tacc) else raise End_of_file
+	in
+	aux ([]) ([]) false
+	
+let iter_sentence chan f =
+	try
+		while(true) do
+			f (read_sentence chan)
+		done;
+	with End_of_file -> ()
+			
+	
+(*
+
 (* vegigmegy a chan minden mondatan is atadja az f-nek*)
 let iter_sentence chan f =
 	let rec loop () = 
@@ -86,20 +112,12 @@ let iter_sentence chan f =
 	with End_of_file -> ()
 
 ;;
-
-let iter_tokens chan f =
-	iter_sentence chan (List.iter f)
+*)
 	
 let rec fold_sentence f a chan =
 	 try
-	 	let sentence = read_sentence chan in
+	 	let (words, tags) = read_sentence chan in
+		let sentence = List.combine words tags in
 	 	fold_sentence f (f a sentence) chan
 	with End_of_file -> a
 
-let print_sentence sentence =
-	let print_pair (word, gold) = 
-		Printf.fprintf stdout "%s\t%s\n" word gold;
-	
-		 in
-		List.iter (print_pair) sentence
-;;
