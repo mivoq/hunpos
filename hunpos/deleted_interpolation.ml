@@ -57,13 +57,14 @@ let calculate_lamdas ntree dtree n =
 		in
 		let nom   = List.rev (Ngramtree.freq deleted_ngram  ntree ) in
 		let denom = List.rev (Ngramtree.freq   (Ngram.chop_right deleted_ngram)  dtree) in
-        let (_,maxi) =   searchmax (-1.0) (n) 0  nom denom  in
-	    lamdas.(maxi) <-lamdas.(maxi) + freq 
+        let (p,maxi) =   searchmax (-1.0) (n) 0  nom denom  in
+	    Printf.printf "%s %d %f\n" (String.concat " " deleted_ngram)  maxi p;
+		lamdas.(maxi) <-lamdas.(maxi) + freq 
 	
 	in
 	let lamdas = Array.create (n+1) 0 in
 	Ngramtree.iter (incrementation lamdas) n ntree;
-(*	lamdas.(n) <- 0;*)
+	lamdas.(n) <- 0;
 	(* normalization *)
     let sum = Array.fold_left (fun sum x -> sum+x) 0 lamdas in
 	Array.map (fun x -> float x /. float sum) lamdas
