@@ -1,102 +1,89 @@
-(************************************************************************
-*
-*  viterbi.ml
-*
-*
-*
-************************************************************************)
+(*
+module type S = 
+sig
 
-(* A viterbit nem erdekli a hmm, csak P(s1 | s0, o1) = P(s1 | s0) * P(o1 | s1)
-   szorzat. A hmm-tol ezeket egyben kerjuk el, amit visszakapunk az egy tuple
-   lista: milyen allapotokba lehet eljutni es milyen sullyal (log P)
+	type state
+	type observation
+	type hmm
+	val decode :  hmm ->  state ->  observation list ->  state list
+
+end
+
+
+module Make(M: Amap.S) : (S with type state =  M.key) = struct
 *)
 
+(*module M = Mfhash.Make(struct type t = string Ngram2.t 
+					   let compare n1 n2 = Ngram2.compare n1 n2 2
+					   let hash ngram = Ngram2.hash ngram 2 
+					   let equal n1 n2 = Ngram2.equal n1 n2 2
+					   end)
+*)					
 
-
-module Make (OrderedState : Map.OrderedType) = struct
-	module Cmap = Map.Make(OrderedState)
-	type ot = int
-    type st = OrderedState.t
+module Make (M : Amap.S)  = struct
 	
+type state = M.key
+type node = {state : state ; mutable from : node option; mutable weight : float }
 
-(* start után minden csomópontról feljegyezzük az addigi súlyt és
-	hogy honnan mentünk oda
-	*)
-type  node = Start |  Token of float * st * node 
-
-
-let decode start_state observation trans_probs  = 
-	
-	(* egy lepes elore: a current_node-okbol hova lehet eljutni? *)
-	let step_forward o current_nodes =
-		let transition_fun = trans_probs o in
-		let max_weight = ref neg_infinity in
+let decode hmm start_state observations =
 		
-	
-		let check_node  from_state from_node new_nodes =	
-		
-			(* csak aux, amikor jobb allapotot talaltunk kovetonek *)
-			let add_node_to_trellis weight pstate pnode new_nodes =
-          		if weight > !max_weight then max_weight := weight ;
-				Cmap.add pstate (Token(weight, pstate, pnode)) new_nodes 
-			in 
-			(* vegig megyunk a lehetseges koveto allapotokon es megnezzuk jobb-e odamenni:
-				itt tehat from_state, from_node parbol ellenorizzuk, h state-be transw sullyal jok vagyunk-e *)
-			let check_follow_state new_nodes (state, transw )  =
-				let new_weight = 
-					match from_node with
-						| Token(weight_dueto, cstate,  pptoken) ->weight_dueto +. transw 
-						| Start -> transw
-					 in
-				try 
-					match (Cmap.find state new_nodes) with
-						Token(weight, _, _) -> 
-							if new_weight > weight then 
-							    add_node_to_trellis new_weight state from_node new_nodes
-								(* Cmap.add state (Token(new_weight, state, from_node)) new_nodes *)
-							else new_nodes
-						| Start ->  failwith "confused"
-				 with Not_found ->
-					add_node_to_trellis new_weight state from_node new_nodes
-			in	
-			(* hmm megmondja, hogy hova milyen sullyal lehet menni from_state-bol o eseten. Mindegyikre vegigprobaljuk a sulyt *)
-		
-			List.fold_left check_follow_state new_nodes (transition_fun from_state)  
-		
-	  	in
-			let new_nodes = Cmap.fold check_node current_nodes Cmap.empty in
-          (*	Printf.printf "new nodes: %d \n" (Cmap.fold (fun k d n -> n+1)   new_nodes 0);*)
-			
-  			Cmap.fold (fun state (Token(w, _, _))  map -> if w < (!max_weight -. (log 1000.)) then Cmap.remove state map else map) new_nodes new_nodes 
-	in
-	let rec forward observation current_nodes =
-		match observation with
-			| [] -> current_nodes
-			| h :: l -> forward l (step_forward h current_nodes )
-	in
-	
-    let start_nodes = Cmap.add (start_state) Start Cmap.empty in 
-	let end_nodes = forward observation start_nodes in
-		
- 	(* Itt mar megvan a trellisszeru adatunk, csak ritka matrixkent tarolva.
-	   Most a vegen kivalasztjuk a legjobbat, majd felfejtj-k *)
-	
-	
-	let max = ref neg_infinity in 
-	let competition node competitor =
-		match node with 
-			Start -> node
-			| (Token(w,cstate,ptoken) as node) ->
-				 if w > !max then (max:=w;  node) else (competitor)
-		in 
-    let  best_node = Cmap.fold (fun k  node  competitor ->competition node competitor) end_nodes Start	in
-
-		(* visszafejteskor egy listaba kell beraknunk*)
-		let rec back states node =
-			match node with
-				| Start -> states
-				| Token(w, state, ptoken) -> back (state :: states) ptoken
+	let step_forward current_nodes obs =
+		let (transition_prob, emission_prob) = hmm obs in
+		let next_nodes = M.empty () in 	
+		let from_node node =
+			let next_states = transition_prob node.state in
+			List.iter (fun (to_state, w) ->
+				(* check that coming from node.state to to_state is better *)
+				let w = w +. node.weight in
+                let _ = M.update next_nodes to_state 
+						(fun () -> {state=to_state; from=Some node;weight = w}) 
+						(fun old -> let _ = 
+									if old.weight < w then begin
+											old.weight <- w;
+											old.from <- Some node
+									end in 
+									old
+						)
+				in ()
+				) next_states
 		in
-		back [] best_node
+		List.iter from_node current_nodes;
+		(* now 1. add emission probs,  2.  search the max weight, 3. map it to a list, *)
+		(* but: if there is only one state, we don't need to do anything *)
+		
+		let next_nodes = M.fold (fun state node l ->
+									node::l
+			 					) [] next_nodes in
+		if (List.length next_nodes) = 1 then next_nodes else
+			let max = ref neg_infinity in
+			(* beam pruning *)
+			List.iter (fun node ->
+						node.weight <- node.weight +. (emission_prob node.state);
+						if node.weight > !max then max:=node.weight ;
+						) next_nodes ;
+				
+			let logtheta = log 100.0 in
+			let rec filter l acc = match l with
+	             h::t -> let acc = if h.weight < (!max -. logtheta) then acc else h::acc in
+						filter t acc
+			 | [] -> acc
+			in
+			filter next_nodes []
+	in
+	let  start_node = {state = start_state; from = None; weight = 0.0} in
+	let end_nodes = List.fold_left step_forward (start_node::[]) observations in
 	
- end;;
+	(* search the best end_node *) 
+	let end_node = match end_nodes with
+		h::t -> List.fold_left (fun best n -> if best.weight < n.weight then n else best) h t
+		| [] -> failwith "no stop node"	
+	in
+	
+	(* make a list *)
+	let rec back states node = 
+		match node.from with
+			None -> states
+			| Some(from) ->back (node.state :: states) from
+	in
+	back [] end_node
+end

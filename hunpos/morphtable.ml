@@ -19,6 +19,7 @@ let load file =
 		let _ = 
 			match (split '\t' line)  with
 				| word :: [] -> ()
+				| word :: "" :: [] -> ()
                 | word::anals ->
 								 
 	 							  let tags = List.fold_left (fun s a -> SSet.add a s) SSet.empty anals in

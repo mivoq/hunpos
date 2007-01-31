@@ -1,34 +1,32 @@
-type t = string list 
-
-let rec compare ngram1 ngram2 =
+type 'a t = 'a list 
+let gram_compare = String.compare
+let gram_hash = Hashtbl.hash
+		
+let empty = []
+	
+let add word ngram = word :: ngram
+	
+let rec compare ngram1 ngram2 n =
+	if n <= 0 then 0 else
 	match (ngram1, ngram2) with
-		  ([] , []) -> 0	(* ha mindketto ures, akkor egyenloek *)
+		| (t1::h1, t2::h2)  -> 
+			let c = gram_compare t1 t2 in if c != 0 then c else compare h1 h2 (pred n)
+		| ([] , []) -> 0	(* ha mindketto ures, akkor egyenloek *)
 		| (t::_ , [] ) -> 1
 		| ([], t::_)  -> -1
-		| (t1::h1, t2::h2) -> let c = String.compare t1 t2 in if c != 0 then c else compare h1 h2
 	
+let equal ngram1 ngram2 n =
+	(compare ngram1 ngram2 n) = 0
 	
+let hash ngram n =
+	let rec aux ngram n h = 
+		if n < 1 then 1 else
+		match ngram with
+		[] -> h
+		| gram::t -> aux t (pred n) ((gram_hash gram) * 31)
+	in
+	aux ngram n 1 
 	
-let rec empty l = match l with
-	0 -> []
-	| l -> "<s>" :: empty (pred l)
-	
-let print ngram =
-  let s = String.concat " " ngram in
-  print_string s;
-  print_newline();
-;;
-
-let rec chop_right ngram = match ngram with
-	[] -> []
-	| l :: [] -> []
-	| l :: h -> l :: chop_right h
-	
-let shift_left ngram ne = match ngram with 
-	| []  -> ne :: []
- 	| head::tail -> (tail @ (ne :: []))
-
-let shift_right ngram ne = match ngram with
-	| []  -> ne :: []
-	| _ -> ne :: (chop_right ngram) 
-	
+let newest = function
+	newest :: _ -> newest
+   | _ -> failwith ("empty ngram") 
