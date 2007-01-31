@@ -1,0 +1,15 @@
+OCAMLMAKEFILE = ../../OCamlMakefile
+
+SOURCES =  io.ml  viterbi.ml danieldecoder.ml
+LIBS=ocautil
+LIBDIRS=../util
+INCDIRS=../util
+RESULT = danieldecoder
+
+
+export OCAMLNCFLAGS := -unsafe -inline 100 
+all: native-code
+#all: profiling-byte-code
+
+include $(OCAMLMAKEFILE)
+
