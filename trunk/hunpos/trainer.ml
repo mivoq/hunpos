@@ -1,19 +1,27 @@
-let add_sentence (otree, ttree) sentence = 
-let sentence = List.rev sentence in
-  let window = Ngram.empty 2 in
-  let f (window, otree, ttree) (word, gold)  = 
-	let new_window = Ngram.shift_right window gold in
-  (*  let ot = Ngramtree.add otree (word :: new_window) in
-	*)
-	let ot = otree in
-	let tt = Ngramtree.add ttree (gold :: window) in
+module SNgramTree = Ngramtree.Make(Mfhash.String)
 
-	(new_window, ot, tt)
-  in 
-  let ttree = Ngramtree.add ttree (window) in
-  let (w, otree, ttree) = List.fold_left (f)  (window, otree, ttree) sentence in
-	  let (w,  otree, ttree) = f  (w,otree, ttree) ("</S>", "</s>") in
-	( otree, ttree)
+let build_modell chan = 
+	let tt = SNgramTree.empty () in
+	let ot = SNgramTree.empty () in
+	let add_sentence (words, tags) =
+	
+		let rec aux words tags =		
+			match words, tags with
+			 |  (word::[], tag::[]) -> SNgramTree.add tt tags 2;
+			 |	(word::word_tails),
+			 	(tag::tag_tails)   -> SNgramTree.add tt tags 3;
+									  SNgramTree.add ot (word::tags) 3;
+						  			  aux word_tails tag_tails
+			 | (_,_) -> ()
+		in
+		let tags = ("</s>"::tags) @ ("<s>"::[]) in
+		let words  = ("</s>"::words) @ ("<S>"::[]) in
+	    aux words tags;
+	in
+	Io.iter_sentence chan add_sentence;
+	(tt, ot)
+	
+	
 
 let usage () = 
 	Printf.eprintf "usage : %s corpusfile modelfile \n" Sys.argv.(0)
@@ -23,36 +31,34 @@ let _ =
 if (Array.length Sys.argv) < 3 then 
 	let _ = usage () in	exit 1 
 else
-	
+
 let chan = open_in Sys.argv.(1) in
 	(* test.train *) 
 	(* szeged.ful.0.test *)
 
 
 
-Printf.eprintf "building frequency trees\n";
-let (otree, ttree) = Io.fold_sentence  add_sentence (Ngramtree.empty, Ngramtree.empty) chan in
+prerr_endline "building frequency trees";
+let (ttree, otree) = build_modell chan in
 (* Ngramtree.print otree; *)
 (*Ngramtree.print ttree; 
-
-Printf.eprintf "calculating observation lamdas\n";
-let olamdas = Deleted_interpolation.calculate_lamdas otree ttree 3 in
 *)
-Printf.eprintf "calculating tag transition lamdas\n";
-let tlamdas = Deleted_interpolation.calculate_lamdas ttree ttree 3 in
-	Array.iteri (fun i v -> Printf.printf "%d = %f\n" i v) tlamdas; 
 
-(*
-Printf.eprintf "deriving observation probabilities\n";
-let potree = Deleted_interpolation.build otree ttree olamdas in
+let suffixtrie = Suffix_guesser.empty () in
+let suffix gram freq =
+	if freq > 10 then () else
+	let (word::tag::t) = gram in
+	Suffix_guesser.add_word suffixtrie word tag freq
+in
+prerr_endline "building suffix trie";
+SNgramTree.iter_level 2 suffix otree;
+prerr_endline "estimating theta";
+let t = Suffix_guesser.theta suffixtrie in
+Suffix_guesser.toprob suffixtrie t;
+prerr_endline "calculating probs";
 
-Printf.eprintf "deriving tag transition probabilities\n";
-let pttree = Deleted_interpolation.build ttree ttree tlamdas in
 
-Printf.eprintf "model is trained.\n";
-Printf.eprintf "saving.\n";
 
 let oc = open_out Sys.argv.(2) in
-Marshal.to_channel oc (potree, pttree) [];
+Marshal.to_channel oc (ttree, otree,suffixtrie) [];
 close_out oc;
-*)
