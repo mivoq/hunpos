@@ -1,0 +1,7 @@
+name = "ocautil"
+version = "0.1"
+description = "Common utils"
+requires = ""
+archive(byte) = "ocautil.cma"
+archive(native) = "ocautil.cmxa"
+linkopts = ""
