@@ -40,6 +40,12 @@ let rec add (t: int t) ngram n =
 		| [] -> ()	
 ;;
 
+let add_bos t ngram n =
+	(* ez most hack arra az esetre ha <s>-t adunk hozza *)
+	add t ngram n;
+	t.freq <- t.freq - 1;
+;;
+
 let iter  f t =
 	let rec aux t acc =
 		f (List.rev acc) t.freq;

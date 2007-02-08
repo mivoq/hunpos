@@ -7,15 +7,18 @@ let build_modell chan =
 	
 		let rec aux words tags =		
 			match words, tags with
-			 |  (word::[], tag::[]) -> SNgramTree.add tt tags 2;
+			 |  (word::[], first_tag::start_tags) -> SNgramTree.add ot (word::tags) 2;
+													SNgramTree.add tt tags 2;
+													SNgramTree.add_bos tt start_tags 1;
+			
 			 |	(word::word_tails),
 			 	(tag::tag_tails)   -> SNgramTree.add tt tags 3;
 									  SNgramTree.add ot (word::tags) 3;
 						  			  aux word_tails tag_tails
 			 | (_,_) -> ()
 		in
-		let tags = ("</s>"::tags) @ ("<s>"::[]) in
-		let words  = ("</s>"::words) @ ("<S>"::[]) in
+		SNgramTree.add tt ("<s>" :: tags) 3;
+		let tags = tags @ ("<s>" :: "<s>" :: []) in
 	    aux words tags;
 	in
 	Io.iter_sentence chan add_sentence;
@@ -46,7 +49,7 @@ let (ttree, otree) = build_modell chan in
 
 let suffixtrie = Suffix_guesser.empty () in
 let suffix gram freq =
-	if freq > 10 then () else
+	if freq >= 15 then () else
 	let (word::tag::t) = gram in
 	Suffix_guesser.add_word suffixtrie word tag freq
 in
