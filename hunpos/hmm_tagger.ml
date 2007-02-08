@@ -4,6 +4,7 @@ type observation = {word : string;
 					mutable seen : bool; 
 					mutable oov : bool; 
 					mutable anals : string list;
+					mutable guessed: (string * float ) list;
 					}
 
 let load filename   morphtable tag_order emission_order = 
@@ -14,13 +15,12 @@ let load filename   morphtable tag_order emission_order =
 
 (*	Printf.eprintf "calculating tag transition lamdas\n";
 *)	let tlamdas = SNgramTree.calculate_lambdas ttree ttree (tag_order + 1) in
-	Array.iteri (fun i v -> Printf.eprintf "%d = %f\n" i v) tlamdas; 
-	
+(*	Array.iteri (fun i v -> Printf.eprintf "%d = %f\n" i v) tlamdas; 
+*)	
 (*	Printf.eprintf "calculating observation lamdas\n";
 *)	let olamdas = SNgramTree.calculate_lambdas otree ttree (emission_order + 1) in
-	Array.iteri (fun i v -> Printf.eprintf "%d = %f\n" i v) olamdas; 
-
-
+(*	Array.iteri (fun i v -> Printf.eprintf "%d = %f\n" i v) olamdas; 
+*)
 (*	Printf.eprintf "deriving observation probabilities\n";
 *)	let potree = SNgramTree.probtree otree ttree olamdas in
 	(*
@@ -47,12 +47,14 @@ let module SNgramTree = Ngramtree.Make(Mfhash.String)
 in
 
 let start_state = "<s>" :: "<s>" :: [] in
-	
- 
-let word2observation w = { word = w; seen = true; oov = false; anals = []} in
-	
+
 let next obs =
 		let w = obs.word in
+		if w = "<s>" then
+			let transition from = ((Ngram.add "<s>" from),SNgramTree.wordprob pttree from "<s>")::[] in
+			let emission state = 0.0 in
+			(transition, emission)
+		else 
 		let (oov, anals) = try (false, Morphtable.analyze morphtable w) with Not_found -> (true, []) in
 		obs.oov <- oov ; 
 		obs.anals <- anals;	
@@ -89,20 +91,17 @@ let next obs =
 				(transition, emission)
 			else begin				
 			let gtags_probs = Suffix_guesser.probs suffixtrie w in
-			
+			obs.guessed <- gtags_probs;
 			(* csak a morphtable alta adott elemzeseket fogadjuk el *)
 			let tags_probs =
 				if obs.oov then gtags_probs
 				else let l =List.filter (fun (tag, _) -> List.mem tag obs.anals) gtags_probs in
-				if List.length l = 0 then begin Printf.printf "hunmorph hiba: %s\n" w ; gtags_probs end else begin Printf.printf "filtered\n"; l end
+				if List.length l = 0 then begin Printf.printf "hunmorph hiba?: %s\n " w ;
+				List.iter (fun (t, p) -> Printf.printf "%s %f " t p) gtags_probs;
+				List.iter (fun t -> Printf.printf "%s " t ) obs.anals; Printf.printf "\n";
+				 gtags_probs end else l 
 			in	
-			if List.length gtags_probs != List.length tags_probs then
-				Printf.printf "mis:\t"; 
-			
-			Printf.printf "%s->" w ;
-			List.iter (fun (t, p) -> Printf.printf "%s %f " t p) gtags_probs;
-			List.iter (fun t -> Printf.printf "%s " t ) obs.anals;
-			Printf.printf "\n";
+		
 			let transition 	from = List.map (fun (tag,logprob) -> 
 							let next_state = Ngram.add tag from in
 							let tp = SNgramTree.wordprob pttree from tag in
@@ -122,8 +121,10 @@ in
 
 let tag_sentence words  =
 
-	let observations = 	List.map (word2observation) (List.rev ( words))  in
+	let word2observation w = { word = w; seen = true; oov = false; anals = []; guessed = []} in
+
+	let observations = 	List.map (word2observation) (List.rev ( "<s>"::words))  in
 	let state_seq = StateViterbi.decode next start_state observations in
-	( (List.rev  observations),  (List.rev (List.map  (Ngram.newest) (state_seq))))
+	( List.tl (List.rev  observations), List.tl (List.rev (List.map  (Ngram.newest) (state_seq))))
 		
  in tag_sentence

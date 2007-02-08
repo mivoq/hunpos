@@ -20,6 +20,7 @@ let eval obs gtags tags =
 		if (compare gold tag) != 0 then
 		begin
 			false_matrix.(seen).(oov) <- false_matrix.(seen).(oov) + 1;
+		
 	(*		if  seen = 1 then Printf.printf "%s\t%s\t%s\t\tmorph: %s\n" obs.Hmm_tagger.word gold tag (String.concat "@"  obs.Hmm_tagger.anals);
 	*)
 		end
