@@ -10,8 +10,8 @@ INCDIRS=../util
 RESULT = tagandtest
 
 export OCAMLNCFLAGS := -unsafe 
-all: nc
-#all: profiling-native-code
+#all: nc
+all: profiling-native-code
 #all: profiling-byte-code
 #all:nc
 include $(OCAMLMAKEFILE)

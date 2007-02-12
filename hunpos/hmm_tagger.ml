@@ -9,7 +9,7 @@ type observation = {word : string;
 
 let load filename   morphtable tag_order emission_order = 
 	let ic = open_in filename in
-	let  (ttree, otree, suffixtrie) = Marshal.from_channel ic in
+	let  (ttree, otree, suffixtrie, vocab) = Marshal.from_channel ic in
 	close_in ic;
 
 
@@ -31,7 +31,13 @@ let load filename   morphtable tag_order emission_order =
 (*	SNgramTree.iter  (fun l freq -> Printf.printf "%s\t%f\n" (String.concat " " l) freq ) pttree;	
 	Printf.eprintf "model is built.\n";
 *)	
+	prerr_endline "calculating theta";
+	let theta = Suffix_guesser.theta suffixtrie in
+	prerr_string "theta = "; prerr_float theta; prerr_newline ();
 	
+	let tagprobs = Suffix_guesser.guesser_from_trie suffixtrie theta vocab in
+	let a = tagprobs "Zamárdiba"  in
+	List.iter (fun (t,p) -> Printf.printf "%s %f\n" (t) p) a;
 	
 
 let module State = struct
@@ -50,6 +56,7 @@ let start_state = "<s>" :: "<s>" :: [] in
 
 let next obs =
 		let w = obs.word in
+	
 		if w = "<s>" then
 			let transition from = ((Ngram.add "<s>" from),SNgramTree.wordprob pttree from "<s>")::[] in
 			let emission state = 0.0 in
@@ -90,7 +97,7 @@ let next obs =
 				in
 				(transition, emission)
 			else begin				
-			let gtags_probs = Suffix_guesser.probs suffixtrie w in
+			let gtags_probs = tagprobs  w in
 			obs.guessed <- gtags_probs;
 			(* csak a morphtable alta adott elemzeseket fogadjuk el *)
 			let tags_probs =
@@ -105,7 +112,6 @@ let next obs =
 			let transition 	from = List.map (fun (tag,logprob) -> 
 							let next_state = Ngram.add tag from in
 							let tp = SNgramTree.wordprob pttree from tag in
-							
 							(next_state, (tp )) 
 				) tags_probs			
 			in

@@ -1,6 +1,6 @@
 OCAMLMAKEFILE = ../../OCamlMakefile
 
-SOURCES = io.ml  suffix_guesser.ml ngramtree.ml train.ml
+SOURCES = io.ml  assoclist.ml suffix_guesser.ml ngramtree.ml train.ml
 
 RESULT = train
 LIBS=ocautil
@@ -9,6 +9,7 @@ INCDIRS=../util
 
 export OCAMLNCFLAGS := -unsafe -inline 100 
 all: native-code
+#all: debug-code
 #all: profiling-byte-code
 
 include $(OCAMLMAKEFILE)

@@ -1,5 +1,7 @@
 module SNgramTree = Ngramtree.Make(Mfhash.String)
 
+let vocab = Vocab.create () 
+	
 let build_modell chan = 
 	let tt = SNgramTree.empty () in
 	let ot = SNgramTree.empty () in
@@ -46,22 +48,42 @@ let (ttree, otree) = build_modell chan in
 (* Ngramtree.print otree; *)
 (*Ngramtree.print ttree; 
 *)
-
+(*
+let n = ref 0 in
 let suffixtrie = Suffix_guesser.empty () in
 let suffix gram freq =
 	if freq >= 15 then () else
 	let (word::tag::t) = gram in
+	incr n ;
 	Suffix_guesser.add_word suffixtrie word tag freq
 in
 prerr_endline "building suffix trie";
 SNgramTree.iter_level 2 suffix otree;
-prerr_endline "estimating theta";
-let t = Suffix_guesser.theta suffixtrie in
-Suffix_guesser.toprob suffixtrie t;
-prerr_endline "calculating probs";
 
+print_int !n; print_endline " words added";
+*)
+let n = ref 0 in
+let suffixtrie = ref Suffix_guesser.empty  in
+let suffix gram freq =
+	if freq >= 15 then () else
+	let (word::tag::t) = gram in
+	incr n ;
+	let ix = Vocab.toindex vocab tag in
+	suffixtrie := Suffix_guesser.add_word !suffixtrie word ix freq;
+(*	Printf.printf "after %s %s\n" word tag ;
+	Suffix_guesser.print !suffixtrie;
+*)in
+prerr_endline "building suffix trie";
+SNgramTree.iter_level 2 suffix otree;
+(*Suffix_guesser.print_stat !suffixtrie;
+*)
+
+let theta = 0.0001 in
+let tagprobs = Suffix_guesser.guesser_from_trie !suffixtrie theta vocab in
+let a = tagprobs "Zamárdiba"  in
+List.iter (fun (t,p) -> Printf.printf "%s %f\n" t p) a;
 
 
 let oc = open_out Sys.argv.(2) in
-Marshal.to_channel oc (ttree, otree,suffixtrie) [];
+Marshal.to_channel oc (ttree, otree,!suffixtrie, vocab) [];
 close_out oc;
