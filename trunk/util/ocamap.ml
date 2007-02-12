@@ -44,3 +44,6 @@ end
 module Int = Make (struct  type t = int 
 	let compare = compare
 end)
+
+module String = Make (struct type t = string let compare = compare end
+)

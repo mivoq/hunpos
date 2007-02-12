@@ -1,6 +1,6 @@
 OCAMLMAKEFILE = ../../OCamlMakefile
 
-SOURCES = amap.ml ocamap.ml mfhash.ml trie.ml  parse.ml  vocab.ml 
+SOURCES = amap.ml ocamap.ml mfhash.ml trie.ml  parse.ml vocab.mli vocab.ml 
 
 RESULT = ocautil
 LIBINSTALL_FILES = *.cmi *.cma *.cmo *.cmx *.cmxa *.a *.o
