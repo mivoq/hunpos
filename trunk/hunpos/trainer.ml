@@ -9,13 +9,13 @@ let build_modell chan =
 	
 		let rec aux words tags =		
 			match words, tags with
-			 |  (word::[], first_tag::start_tags) -> SNgramTree.add ot (word::tags) 2;
+			 |  (word::[], first_tag::start_tags) -> SNgramTree.add ot ((word)::tags) 2;
 													SNgramTree.add tt tags 2;
 													SNgramTree.add_bos tt start_tags 1;
 			
 			 |	(word::word_tails),
 			 	(tag::tag_tails)   -> SNgramTree.add tt tags 3;
-									  SNgramTree.add ot (word::tags) 3;
+									  SNgramTree.add ot ((word)::tags) 3;
 						  			  aux word_tails tag_tails
 			 | (_,_) -> ()
 		in
@@ -79,10 +79,12 @@ SNgramTree.iter_level 2 suffix otree;
 *)
 
 let theta = 0.0001 in
-let tagprobs = Suffix_guesser.guesser_from_trie !suffixtrie theta vocab in
+let (tagprob, tagprobs) = Suffix_guesser.guesser_from_trie !suffixtrie theta 1000. vocab  in
 let a = tagprobs "Zamárdiba"  in
 List.iter (fun (t,p) -> Printf.printf "%s %f\n" t p) a;
 
+let p = tagprob "Zamárdiba" "NOUN<CAS<ILL>>" in
+Printf.printf "NOUN<CAS<ILL>> %f\n" p;
 
 let oc = open_out Sys.argv.(2) in
 Marshal.to_channel oc (ttree, otree,!suffixtrie, vocab) [];

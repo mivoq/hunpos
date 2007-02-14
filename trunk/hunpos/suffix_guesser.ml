@@ -15,7 +15,8 @@ let empty_counts =  (0, T.empty)
 let empty = Empty
 	
 let add_word trie word tag count =
-	let start = (String.length word - 1) in
+(*	print_string "add word: "; print_string word; print_char ' '; print_int (String.length word); print_newline ();
+*)	let start = (String.length word - 1) in
 	let stop = max 0 (start - n) in
 	let rec add_char node legacy_counts after_branch ix =
 		let update (scount, tagcounts) =
@@ -118,10 +119,10 @@ let calculate_probs trie theta =
 *)	
 
 
-let guesser_from_trie trie theta vocab =
+let guesser_from_trie trie theta alfa vocab =
 	let mx = Vocab.max vocab - 1  in
 	let theta_plus_one = theta +. 1.0 in
-	let log_alfa = log 10000. in
+	let log_alfa = log alfa in
 	let apriori_tag_prob = Array.make (mx + 1) 0.0 in
 	let (childs) = 
 	match trie with
@@ -134,7 +135,45 @@ let guesser_from_trie trie theta vocab =
 						
 		| _ -> failwith ("furcsa trie")
 	in
+
+let trie_iterator word f = 
+	let start = (String.length word - 1) in
+	let stop = max 0 (start - n) in
 	
+	let rec aux (Node(trie_node, tag_info)) legacy_counts ix  =
+		let ((scount, tag_counts) as inherited_counts ) = match tag_info with
+			Some(x) -> x
+			| _ -> legacy_counts 
+		in
+		let scount = float scount in
+			
+		f scount tag_counts ;
+	
+		if ix >= stop then
+		match trie_node with
+			Terminal -> ()
+               | OneChild(c, child) -> if c = word.[ix] then aux child  inherited_counts (ix - 1) 
+			   | Branch(childs)     -> try 
+								  	      let child = C.find word.[ix] childs in
+									      aux child  inherited_counts (ix - 1) 
+							  	          with Not_found -> ()		
+	in
+	aux trie (0, T.empty) start; 
+
+in
+	
+let tag_prob word tag =
+	let accu = ref 0.0 in
+	let tagid = Vocab.toindex vocab tag in
+	let roll_prob suff_count tag_counts =
+		let tag_count = try (float (T.find  tagid tag_counts)) /. suff_count with Not_found -> 0.0 in
+        accu := (!accu *. theta +. tag_count) /. theta_plus_one 
+	
+	in
+	trie_iterator word roll_prob;
+	accu := log !accu -. apriori_tag_prob.(tagid);
+	!accu
+in	
 		
 let tagprobs  word  =
 
@@ -157,7 +196,7 @@ let tagprobs  word  =
 			T.iter (fun tagid freq -> accu.(tagid) <- accu.(tagid) +. (float freq) /. scount ) tag_counts;	
 		
 			for i = 1 to mx  do
-				accu.(i) = accu.(i) /. theta_plus_one
+				accu.(i) <- accu.(i) /. theta_plus_one
 			done;
 		
 		
@@ -190,7 +229,7 @@ let tagprobs  word  =
 			done;
 			!tagprobs
    in
-	tagprobs
+   (tag_prob, tagprobs)
 (*
 let tagprobs trie theta word =
 	let theta_plus_one = theta +. 1.0 in
