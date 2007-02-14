@@ -70,7 +70,7 @@ for i = 0 to 1 do
 		falses := !falses + false_matrix.(i).(j);
 	done;
 done ;
- 
+Printf.printf "tokens count: %d\n" !total;
 Printf.printf "tokens:\n";
 Printf.printf "        %8s %8s\n"  "known" "unknown";
 Printf.printf "seen    %8d %8d\n" total_matrix.(0).(0) total_matrix.(0).(1);	
@@ -89,15 +89,14 @@ let prec = Array.create_matrix 2 2 0.0 in
 	
 for i = 0 to 1 do
 	for j = 0 to 1 do
-		
 		prec.(i).(j) <- float (total_matrix.(i).(j) - false_matrix.(i).(j)) *. 100.0 /. float total_matrix.(i).(j) 
 	done;
 done ;
 	
 	
 Printf.printf "\nprecision:\n" ;
-Printf.printf "        %8s %8s\n"  "known" "unknown";
-Printf.printf "seen    %8.2f %8.2f\n" prec.(0).(0) prec.(0).(1);	
-Printf.printf "unseen  %8.2f %8.2f\n" prec.(1).(0) prec.(1).(1);	
+Printf.printf "        %13s %13s\n"  "known" "unknown";
+Printf.printf "seen    (%4d/%5d) %8.2f (%4d/%5d) %8.2f\n" false_matrix.(0).(0) total_matrix.(0).(0) prec.(0).(0) false_matrix.(0).(1) total_matrix.(0).(1) prec.(0).(1);	
+Printf.printf "unseen  (%4d/%5d) %8.2f (%4d/%5d) %8.2f\n" false_matrix.(1).(0) total_matrix.(1).(0) prec.(1).(0) false_matrix.(1).(1) total_matrix.(1).(1)prec.(1).(1);	
 
 Printf.printf "\noverall precision: %8.2f\n" (float (!total - !falses) /. float !total *. 100.) ;

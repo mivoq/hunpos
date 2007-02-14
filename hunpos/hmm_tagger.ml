@@ -35,10 +35,10 @@ let load filename   morphtable tag_order emission_order =
 	let theta = Suffix_guesser.theta suffixtrie in
 	prerr_string "theta = "; prerr_float theta; prerr_newline ();
 	
-	let tagprobs = Suffix_guesser.guesser_from_trie suffixtrie theta vocab in
-	let a = tagprobs "Zam�rdiba"  in
-	List.iter (fun (t,p) -> Printf.printf "%s %f\n" (t) p) a;
-	
+	let (tagprob, tagprobs) = Suffix_guesser.guesser_from_trie suffixtrie 0.1 1000. vocab  in
+	let a = tagprobs "intézõben"  in
+	List.iter (fun (t,p) -> Printf.printf "intézõben %s %f\n" (t) p) a;
+
 
 let module State = struct
 	type t = string Ngram.t
@@ -62,11 +62,15 @@ let next obs =
 			let emission state = 0.0 in
 			(transition, emission)
 		else 
-		let (oov, anals) = try (false, Morphtable.analyze morphtable w) with Not_found -> (true, []) in
+		let (oov, anals) = try (false, Morphtable.analyze morphtable ( w)) with Not_found -> (true, []) in
 		obs.oov <- oov ; 
 		obs.anals <- anals;	
 		try 
-			let obs_node = SNgramTree.move_to_child potree w in
+		
+			let obs_node =  SNgramTree.move_to_child potree ( w)(* with Not_found ->
+				SNgramTree.move_to_child potree (String.lowercase w) 
+			*)
+				 in
 			obs.seen <- true;
 			
 			(* milyen tagjei lehetnek *)
@@ -87,27 +91,31 @@ let next obs =
 					
 		with Not_found -> (* not seen word *)
 			obs.seen <- false;
-			if not (obs.oov) && List.length obs.anals = 1 then
+			
+			let anals2transtion_fun anals =
 				let transition from = List.map (fun tag  ->
-													let next_state = Ngram.add tag from in
-													let tp = SNgramTree.wordprob pttree from tag in
-													(next_state, tp )) obs.anals
-				in 
-				let emission state = 0.0
+						let next_state = Ngram.add tag from in
+						let tp = SNgramTree.wordprob pttree from tag in
+						(next_state, tp )) anals
 				in
-				(transition, emission)
-			else begin				
-			let gtags_probs = tagprobs  w in
-			obs.guessed <- gtags_probs;
+				transition
+			in
+			
+			match obs.oov, (List.length obs.anals) with
+				false, 1 ->	let transition = (anals2transtion_fun obs.anals)
+							in 
+							let emission state = 0.0 in
+							(transition, emission)
+			 | false, _ -> 	let transition = (anals2transtion_fun obs.anals)
+							in 
+							let emission state = let tag = List.hd state in
+												 tagprob w tag in
+							(transition, emission)
+			 | _ -> begin				
+				let tags_probs = tagprobs  ( w) in
+				obs.guessed <- tags_probs;
 			(* csak a morphtable alta adott elemzeseket fogadjuk el *)
-			let tags_probs =
-				if obs.oov then gtags_probs
-				else let l =List.filter (fun (tag, _) -> List.mem tag obs.anals) gtags_probs in
-				if List.length l = 0 then begin Printf.printf "hunmorph hiba?: %s\n " w ;
-				List.iter (fun (t, p) -> Printf.printf "%s %f " t p) gtags_probs;
-				List.iter (fun t -> Printf.printf "%s " t ) obs.anals; Printf.printf "\n";
-				 gtags_probs end else l 
-			in	
+			
 		
 			let transition 	from = List.map (fun (tag,logprob) -> 
 							let next_state = Ngram.add tag from in
