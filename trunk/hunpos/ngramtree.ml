@@ -40,6 +40,8 @@ let rec add (t: int t) ngram n =
 		| [] -> ()	
 ;;
 
+let freq node = node.freq
+	
 let add_bos t ngram n =
 	(* ez most hack arra az esetre ha <s>-t adunk hozza *)
 	add t ngram n;
@@ -212,6 +214,12 @@ let edges tree =
 	match tree.childs with
 		Some (childs) ->  M.fold (fun k v l -> k :: l) [] childs
 		| None -> (* empty tree *) []
+		
+let iter_childs  f tree=
+	match tree.childs with
+		Some (childs) -> M.iter f childs
+		| None -> ()
+	
 
 end
 	
