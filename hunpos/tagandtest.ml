@@ -3,7 +3,8 @@
 module Hmm_tagger = Hmm_tagger
 let total_matrix = Array.make_matrix 2 2 0 
 let false_matrix = Array.make_matrix 2 2 0 
-
+let unseen_disambig = ref  0
+	
 let rec iter3 f l1 l2 l3 =
   match (l1, l2, l3) with
     ([], [], []) -> ()
@@ -20,10 +21,14 @@ let eval obs gtags tags =
 		if (compare gold tag) != 0 then
 		begin
 			false_matrix.(seen).(oov) <- false_matrix.(seen).(oov) + 1;
-		
-		(*	if  seen = 1 then Printf.printf "%s\t%s\t%s\t\tmorph: %s\n" obs.Hmm_tagger.word gold tag (String.concat "@"  obs.Hmm_tagger.anals);
-	*)
-		end
+			if seen = 1 && oov = 1  then
+			begin
+			incr unseen_disambig;
+			
+			 Printf.printf "%s\t%s\t%s\t\t\n" obs.Hmm_tagger.word gold tag;
+			 List.iter (fun (tag,lprob) -> Printf.printf " \t %s %f\n" tag lprob)  obs.Hmm_tagger.guessed;
+			end
+end
 	in
 	iter3 eval_token obs gtags tags
 		
@@ -62,7 +67,7 @@ let tagger = Hmm_tagger.load Sys.argv.(1)   hunmorph tagorder emorder in
 let ic =  stdin in
 	
 
-Io.iter_sentence ic (tag_sentence tagger);
+Io.iter_tagged_sentence ic (tag_sentence tagger);
 	
 for i = 0 to 1 do
 	for j = 0 to 1 do
@@ -98,5 +103,5 @@ Printf.printf "\nprecision:\n" ;
 Printf.printf "        %13s %13s\n"  "known" "unknown";
 Printf.printf "seen    (%4d/%5d) %8.2f (%4d/%5d) %8.2f\n" false_matrix.(0).(0) total_matrix.(0).(0) prec.(0).(0) false_matrix.(0).(1) total_matrix.(0).(1) prec.(0).(1);	
 Printf.printf "unseen  (%4d/%5d) %8.2f (%4d/%5d) %8.2f\n" false_matrix.(1).(0) total_matrix.(1).(0) prec.(1).(0) false_matrix.(1).(1) total_matrix.(1).(1)prec.(1).(1);	
-
+Printf.printf "unseen and disambig %d\n" !unseen_disambig;
 Printf.printf "\noverall precision: %8.2f\n" (float (!total - !falses) /. float !total *. 100.) ;

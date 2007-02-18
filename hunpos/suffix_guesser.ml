@@ -2,7 +2,7 @@ module C = Map.Make (struct type t = char let compare = compare end)
 (*module T = Assoclist.Make(struct type t = string let equal s1 s2 = s1 = s2 end)
 *)
 module T = Map.Make (struct type t = int let compare = compare end)
-let n = 10 ;;
+let n = 5 ;;
 
 type trie_node = Terminal | OneChild of char * count_node | Branch of count_node C.t and
 counts = (int * int T.t) and
@@ -107,7 +107,7 @@ let theta trie =
 				let theta = ref 0.0 in
 				T.iter (fun tag tagfreq -> let tagp =  (float) tagfreq /. count in
                         theta := !theta +. pow (tagp -. p_av)) tags;
-				!theta /. (s -. 1.)
+				sqrt(!theta /. (s -. 1.))
 		| _ -> failwith("furcsa trie")
 
 
@@ -118,19 +118,34 @@ let calculate_probs trie theta =
 		(* minden csomopontbol csinal egy ujat; ha volt ott counts, akkor kicsereli valoszinusegekre *)
 *)	
 
-
-let guesser_from_trie trie theta alfa vocab =
+module SNgramTree = Ngramtree.Make(Mfhash.String)
+let guesser_from_trie trie tagtree theta alfa vocab =
 	let mx = Vocab.max vocab - 1  in
 	let theta_plus_one = theta +. 1.0 in
 	let log_alfa = log alfa in
+	let use_full_corpus = false in
+
 	let apriori_tag_prob = Array.make (mx + 1) 0.0 in
 	let (childs) = 
 	match trie with
 		Node(Branch(childs), Some (total, tag_counts)) ->
+			if use_full_corpus then begin
+			let total = float (SNgramTree.freq tagtree) in
+			SNgramTree.iter_level 1 (fun tags freq -> try
+									let tag = List.hd tags in
+									let tagid = Vocab.toindex vocab tag in
+									if tagid > mx then  Printf.printf "index out of bound: %d %s" tagid tag else
+									apriori_tag_prob.(tagid) <- log (float freq /. total)
+									with Not_found -> ()
+								) tagtree ; 
+			end
+			else 		 begin
+		
 			let total = float total in
 			T.iter (fun tagid freq -> 
 						apriori_tag_prob.(tagid) <-  log (float freq /. total) 
 			) tag_counts ;
+			end;
 			childs
 						
 		| _ -> failwith ("furcsa trie")
@@ -163,6 +178,7 @@ let trie_iterator word f =
 in
 	
 let tag_prob word tag =
+	try
 	let accu = ref 0.0 in
 	let tagid = Vocab.toindex vocab tag in
 	let roll_prob suff_count tag_counts =
@@ -171,8 +187,12 @@ let tag_prob word tag =
 	
 	in
 	trie_iterator word roll_prob;
-	accu := log !accu -. apriori_tag_prob.(tagid);
+	let _ =
+	try
+	accu := log !accu (*-. apriori_tag_prob.(tagid);*)
+	with _ ->  accu:=neg_infinity ; (*Printf.printf "%s %d %d\n" tag tagid mx *) in
 	!accu
+	with Not_found -> Printf.printf "tag not found: %s\n" tag; neg_infinity
 in	
 		
 let tagprobs  word  =
@@ -212,24 +232,36 @@ let tagprobs  word  =
 								  with Not_found -> ()
 	in
 	aux trie (0, T.empty) start;
-			(* to log, bayes inversion and search the maximum *)
-			let max = ref neg_infinity in
-			for i = 1 to mx  do
-				let prob = log accu.(i)  -. apriori_tag_prob.(i)  in
-				accu.(i) <- prob;
-				if prob > !max then max := prob
-			done;
-			let min = !max -. log_alfa in
-			(* convert to list and do beam pruning *)
-			let tagprobs = ref [] in
-			for i = 1 to mx  do
-				let prob = accu.(i) in
-				if prob > min then
-					tagprobs := (Vocab.toword vocab i, prob) :: !tagprobs
-			done;
-			!tagprobs
+		(* to log, bayes inversion and search the maximum *)
+	let max = ref neg_infinity in
+	for i = 1 to mx  do
+		let prob = log accu.(i)  (*-. apriori_tag_prob.(i) *)  in
+		accu.(i) <- prob;
+		if prob > !max then max := prob
+	done;
+	let min = !max -. log_alfa in
+	(* convert to list and do beam pruning *)
+	let tagprobs = ref [] in
+	for i = 1 to mx  do
+		let prob = accu.(i) in
+		if prob > min then
+			tagprobs := (Vocab.toword vocab i, prob) :: !tagprobs
+	done;
+	!tagprobs
    in
    (tag_prob, tagprobs)
+
+
+
+
+
+
+
+
+
+
+
+
 (*
 let tagprobs trie theta word =
 	let theta_plus_one = theta +. 1.0 in

@@ -76,7 +76,7 @@ let iter_sentence_no_split chan f =
 
 
 *)
-let read_sentence chan =
+let read_tagged_sentence chan =
 	let rec aux wacc tacc read=
 		try 
 		match Parse.split2 '\t' (input_line chan) with
@@ -91,13 +91,32 @@ let read_sentence chan =
 	in
 	aux ([]) ([]) false
 	
+let read_sentence chan =
+	let rec aux wacc read=
+		try 
+		 let line = input_line chan in
+		 if (String.length line) > 0 then 
+				aux (line :: wacc) true
+		 else wacc
+		with End_of_file -> if read then wacc else raise End_of_file
+	in
+	aux ([])  false
+
+
+let iter_tagged_sentence chan f =
+	try
+		while(true) do
+			f (read_tagged_sentence chan)
+		done;
+	with End_of_file -> ()
+			
+	
 let iter_sentence chan f =
 	try
 		while(true) do
 			f (read_sentence chan)
 		done;
 	with End_of_file -> ()
-			
 	
 (*
 
@@ -114,10 +133,10 @@ let iter_sentence chan f =
 ;;
 *)
 	
-let rec fold_sentence f a chan =
+let rec fold_tagged_sentence f a chan =
 	 try
-	 	let (words, tags) = read_sentence chan in
+	 	let (words, tags) = read_tagged_sentence chan in
 		let sentence = List.combine words tags in
-	 	fold_sentence f (f a sentence) chan
+	 	fold_tagged_sentence f (f a sentence) chan
 	with End_of_file -> a
 

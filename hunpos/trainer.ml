@@ -23,7 +23,7 @@ let build_modell chan =
 		let tags = tags @ ("<s>" :: "<s>" :: []) in
 	    aux words tags;
 	in
-	Io.iter_sentence chan add_sentence;
+	Io.iter_tagged_sentence chan add_sentence;
 	(tt, ot)
 	
 	
@@ -64,22 +64,24 @@ print_int !n; print_endline " words added";
 *)
 let n = ref 0 in
 let suffixtrie = ref Suffix_guesser.empty  in
-let suffix gram freq =
-	if freq >= 15 then () else
-	let (word::tag::t) = gram in
-	incr n ;
-	let ix = Vocab.toindex vocab tag in
-	suffixtrie := Suffix_guesser.add_word !suffixtrie word ix freq;
-(*	Printf.printf "after %s %s\n" word tag ;
-	Suffix_guesser.print !suffixtrie;
-*)in
+let do_word word node =
+	
+	let add_suffix tag node =
+		incr n ;
+		let ix = Vocab.toindex vocab tag in
+		suffixtrie := Suffix_guesser.add_word !suffixtrie word ix  (SNgramTree.freq node);
+    in
+	if (SNgramTree.freq node) <= 10 then
+		SNgramTree.iter_childs add_suffix node
+in
+		
 prerr_endline "building suffix trie";
-SNgramTree.iter_level 2 suffix otree;
+SNgramTree.iter_childs  do_word otree;
 (*Suffix_guesser.print_stat !suffixtrie;
 *)
 
 let theta = 0.0001 in
-let (tagprob, tagprobs) = Suffix_guesser.guesser_from_trie !suffixtrie theta 1000. vocab  in
+let (tagprob, tagprobs) = Suffix_guesser.guesser_from_trie !suffixtrie ttree theta 1000. vocab  in
 let a = tagprobs "Zamárdiba"  in
 List.iter (fun (t,p) -> Printf.printf "%s %f\n" t p) a;
 

@@ -35,10 +35,10 @@ let load filename   morphtable tag_order emission_order =
 	let theta = Suffix_guesser.theta suffixtrie in
 	prerr_string "theta = "; prerr_float theta; prerr_newline ();
 	
-	let (tagprob, tagprobs) = Suffix_guesser.guesser_from_trie suffixtrie 0.1 1000. vocab  in
-	let a = tagprobs "intÃ©zÃµben"  in
-	List.iter (fun (t,p) -> Printf.printf "intÃ©zÃµben %s %f\n" (t) p) a;
-
+	let (tagprob, tagprobs) = Suffix_guesser.guesser_from_trie suffixtrie ttree 0.3 100. vocab  in
+(*	let a = tagprobs "intézõben"  in
+	List.iter (fun (t,p) -> Printf.printf "intézõben %s %f\n" (t) p) a;
+*)
 
 let module State = struct
 	type t = string Ngram.t
