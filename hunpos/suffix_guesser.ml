@@ -185,14 +185,14 @@ let tag_prob word tag =
 	let accu = ref 0.0 in
 	let tagid = Vocab.toindex vocab tag in
 	let roll_prob suff_count tag_counts =
-		let tag_count = try (float (T.find  tagid tag_counts)) /. suff_count with Not_found -> 0.0 in
-        accu := (!accu *. theta +. tag_count) /. theta_plus_one 
+		let tag_prob = try (float (T.find  tagid tag_counts)) /. suff_count with Not_found -> 0.0 in
+        accu := (!accu  +. (tag_prob *. theta)) /. theta_plus_one 
 	
 	in
 	trie_iterator word roll_prob;
 	let _ =
 	try
-	accu := log !accu (*-. apriori_tag_prob.(tagid);*)
+	accu := log !accu -. apriori_tag_prob.(tagid);
 	with _ ->  accu:=neg_infinity ; (*Printf.printf "%s %d %d\n" tag tagid mx *) in
 	!accu
 	with Not_found -> Printf.printf "tag not found: %s\n" tag; neg_infinity
