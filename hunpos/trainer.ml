@@ -1,30 +1,41 @@
 module SNgramTree = Ngramtree.Make(Mfhash.String)
-
+let emission_order = 3 
+let tag_order = 3
+	
 let vocab = Vocab.create () 
 	
 let build_modell chan = 
 	let tt = SNgramTree.empty () in
 	let ot = SNgramTree.empty () in
+	let st = SNgramTree.empty () in
+	let add_word word tags order = 
+		SNgramTree.add ot ((word)::tags) order;
+		let spec = Special_tokens.to_lex word in
+		if spec != word then
+			 SNgramTree.add st ((spec)::tags) order;
+	
+	in
 	let add_sentence (words, tags) =
 	
 		let rec aux words tags =		
 			match words, tags with
-			 |  (word::[], first_tag::start_tags) -> SNgramTree.add ot ((word)::tags) 2;
-													SNgramTree.add tt tags 2;
-													SNgramTree.add_bos tt start_tags 1;
+			 |  (word::[], first_tag::start_tags) -> add_word word tags emission_order;
+													SNgramTree.add tt tags tag_order;
+													SNgramTree.add_bos tt start_tags 3;
 			
 			 |	(word::word_tails),
-			 	(tag::tag_tails)   -> SNgramTree.add tt tags 3;
-									  SNgramTree.add ot ((word)::tags) 3;
+			 	(tag::tag_tails)   -> SNgramTree.add tt tags (tag_order + 1);
+									  add_word word tags (emission_order + 1);
 						  			  aux word_tails tag_tails
 			 | (_,_) -> ()
 		in
-		SNgramTree.add tt ("<s>" :: tags) 3;
-		let tags = tags @ ("<s>" :: "<s>" :: []) in
+		SNgramTree.add tt ("<s>" :: tags) (tag_order + 1);
+		let tags = tags @ ("<s>":: "<s>" :: "<s>" :: []) in
+	
 	    aux words tags;
 	in
 	Io.iter_tagged_sentence chan add_sentence;
-	(tt, ot)
+	(tt, ot, st)
 	
 	
 
@@ -44,50 +55,44 @@ let chan = open_in Sys.argv.(1) in
 
 
 prerr_endline "building frequency trees";
-let (ttree, otree) = build_modell chan in
-(* Ngramtree.print otree; *)
-(*Ngramtree.print ttree; 
+let (ttree, otree, stree) = build_modell chan in
+(*let node = SNgramTree.move_to_child otree "@CARDSEPS" in
+Printf.printf "%d " (SNgramTree.freq node);
 *)
-(*
-let n = ref 0 in
-let suffixtrie = Suffix_guesser.empty () in
-let suffix gram freq =
-	if freq >= 15 then () else
-	let (word::tag::t) = gram in
-	incr n ;
-	Suffix_guesser.add_word suffixtrie word tag freq
-in
-prerr_endline "building suffix trie";
-SNgramTree.iter_level 2 suffix otree;
 
-print_int !n; print_endline " words added";
-*)
-let n = ref 0 in
-let suffixtrie = ref Suffix_guesser.empty  in
+let lsuffixtrie = ref Suffix_guesser.empty  in
+let usuffixtrie = ref Suffix_guesser.empty  in
+let lrarewords = ref 0 in
+let urarewords = ref 0 in
+let maxlength = 10 in
 let do_word word node =
-	
-	let add_suffix tag node =
-		incr n ;
-		let ix = Vocab.toindex vocab tag in
-		suffixtrie := Suffix_guesser.add_word !suffixtrie word ix  (SNgramTree.freq node);
-    in
-	if (SNgramTree.freq node) <= 10 then
-		SNgramTree.iter_childs add_suffix node
+
+	if (SNgramTree.freq node) <= maxlength then
+		let (lword, is_upper) = Io.lowercase word in
+		let used_suftrie, counter = 
+		if not is_upper then
+			lsuffixtrie, lrarewords
+		else
+			usuffixtrie, urarewords
+		in
+			SNgramTree.iter_childs (fun tag node ->
+				let ix = Vocab.toindex vocab tag in
+				used_suftrie := Suffix_guesser.add_word !used_suftrie maxlength lword ix (SNgramTree.freq node);
+				 counter:= !counter + (SNgramTree.freq node);
+				) node
 in
-		
-prerr_endline "building suffix trie";
+
+
+prerr_string "building suffix trie ";
 SNgramTree.iter_childs  do_word otree;
 (*Suffix_guesser.print_stat !suffixtrie;
 *)
 
-let theta = 0.0001 in
-let (tagprob, tagprobs) = Suffix_guesser.guesser_from_trie !suffixtrie ttree theta 1000. vocab  in
-let a = tagprobs "Zamárdiba"  in
-List.iter (fun (t,p) -> Printf.printf "%s %f\n" t p) a;
+prerr_int !lrarewords; prerr_string " lowercase, ";
+prerr_int !urarewords; prerr_endline " uppercase ";
 
-let p = tagprob "Zamárdiba" "NOUN<CAS<ILL>>" in
-Printf.printf "NOUN<CAS<ILL>> %f\n" p;
+
 
 let oc = open_out Sys.argv.(2) in
-Marshal.to_channel oc (ttree, otree,!suffixtrie, vocab) [];
+Marshal.to_channel oc (ttree, otree, stree, !lsuffixtrie, !usuffixtrie, vocab) [];
 close_out oc;

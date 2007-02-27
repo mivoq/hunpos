@@ -15,21 +15,12 @@ let eval obs gtags tags =
 	let eval_token obs gold tag = 
  		(* ha benne van a modell lexikonjában, akkor látott szó *)
 
-		let seen = if  obs.Hmm_tagger.seen then 0 else 1 in
+		let seen = match  obs.Hmm_tagger.seen with Hmm_tagger.Seen -> 0 | _-> 1 in
 		let oov = if obs.Hmm_tagger.oov then 1 else 0 in
 		total_matrix.(seen).(oov) <- total_matrix.(seen).(oov) +1 ;  
 		if (compare gold tag) != 0 then
-		begin
 			false_matrix.(seen).(oov) <- false_matrix.(seen).(oov) + 1;
-			if seen = 1 && oov = 1  then
-			begin
-			incr unseen_disambig;
-			
-			 Printf.printf "%s\t%s\t%s\t\t\n" obs.Hmm_tagger.word gold tag;
-			 List.iter (fun (tag,lprob) -> Printf.printf " \t %s %f\n" tag lprob)  obs.Hmm_tagger.guessed;
-			end
-end
-	in
+		in
 	iter3 eval_token obs gtags tags
 		
 let tag_sentence tagger sentence =
@@ -102,6 +93,6 @@ done ;
 Printf.printf "\nprecision:\n" ;
 Printf.printf "        %13s %13s\n"  "known" "unknown";
 Printf.printf "seen    (%4d/%5d) %8.2f (%4d/%5d) %8.2f\n" false_matrix.(0).(0) total_matrix.(0).(0) prec.(0).(0) false_matrix.(0).(1) total_matrix.(0).(1) prec.(0).(1);	
-Printf.printf "unseen  (%4d/%5d) %8.2f (%4d/%5d) %8.2f\n" false_matrix.(1).(0) total_matrix.(1).(0) prec.(1).(0) false_matrix.(1).(1) total_matrix.(1).(1)prec.(1).(1);	
+Printf.printf "unseen  (%4d/%5d) %8.2f (%4d/%5d) %8.2f\n" false_matrix.(1).(0) total_matrix.(1).(0) prec.(1).(0) false_matrix.(1).(1) total_matrix.(1).(1) prec.(1).(1);	
 Printf.printf "unseen and disambig %d\n" !unseen_disambig;
 Printf.printf "\noverall precision: %8.2f\n" (float (!total - !falses) /. float !total *. 100.) ;

@@ -2,7 +2,7 @@ module C = Map.Make (struct type t = char let compare = compare end)
 (*module T = Assoclist.Make(struct type t = string let equal s1 s2 = s1 = s2 end)
 *)
 module T = Map.Make (struct type t = int let compare = compare end)
-let n = 5 ;;
+
 
 type trie_node = Terminal | OneChild of char * count_node | Branch of count_node C.t and
 counts = (int * int T.t) and
@@ -14,7 +14,8 @@ let empty_counts =  (0, T.empty)
 
 let empty = Empty
 	
-let add_word trie word tag count =
+let add_word trie n word tag count =
+
 (*	print_string "add word: "; print_string word; print_char ' '; print_int (String.length word); print_newline ();
 *)	let start = (String.length word - 1) in
 	let stop = max 0 (start - n) in
@@ -94,21 +95,23 @@ let add_word trie word tag count =
 						Node(Branch(childs),  if after_branch then Some (update inherited_counts) else None)
 	in
 	add_char trie empty_counts true start
+
+
+	module SNgramTree = Ngramtree.Make(Mfhash.String)
+		
+let theta tagtree =
+	let total = float (SNgramTree.freq tagtree) in
 	
-let theta trie =
-	match trie with 
-		Node (_, Some (count , tags)) ->
-				let pow i = i *. i in
-				let count = float count in
-				let s = ref 0 in
-				T.iter (fun tag freq -> incr s) tags;
-				let s = float (!s) in
-				let p_av = 1.0 /. s in   (*-- use uniform distribution over tag-probs *)
-				let theta = ref 0.0 in
-				T.iter (fun tag tagfreq -> let tagp =  (float) tagfreq /. count in
-                        theta := !theta +. pow (tagp -. p_av)) tags;
-				sqrt(!theta /. (s -. 1.))
-		| _ -> failwith("furcsa trie")
+	let pow n = n *. n in
+	let s = ref 0 in
+	SNgramTree.iter_level 1 (fun tag freq -> incr s) tagtree;
+	let s = float (!s) in
+	let p_av = 1.0 /. s in   (*-- use uniform distribution over tag-probs *)
+	let theta = ref 0.0 in
+	SNgramTree.iter_level 1  (fun tag tagfreq -> 
+					 let tagp =  (float) tagfreq /. total in
+                     theta := !theta +.  pow (tagp -. p_av) ) tagtree;
+	sqrt(!theta /. (s -. 1.))
 
 
 
@@ -118,12 +121,11 @@ let calculate_probs trie theta =
 		(* minden csomopontbol csinal egy ujat; ha volt ott counts, akkor kicsereli valoszinusegekre *)
 *)	
 
-module SNgramTree = Ngramtree.Make(Mfhash.String)
 let guesser_from_trie trie tagtree theta alfa vocab =
 	let mx = Vocab.max vocab - 1  in
 	let theta_plus_one = theta +. 1.0 in
 	let log_alfa = log alfa in
-	let use_full_corpus = false in
+	let use_full_corpus = true in
 
 	let apriori_tag_prob = Array.make (mx + 1) 0.0 in
 	let (childs) = 
@@ -134,7 +136,7 @@ let guesser_from_trie trie tagtree theta alfa vocab =
 			SNgramTree.iter_level 1 (fun tags freq -> try
 									let tag = List.hd tags in
 									let tagid = Vocab.toindex vocab tag in
-									if tagid > mx then  Printf.printf "index out of bound: %d %s" tagid tag else
+									if tagid > mx then  () else
 									apriori_tag_prob.(tagid) <- log (float freq /. total)
 									with Not_found -> ()
 								) tagtree ; 
@@ -152,8 +154,9 @@ let guesser_from_trie trie tagtree theta alfa vocab =
 	in
 
 let trie_iterator word f = 
+	
 	let start = (String.length word - 1) in
-	let stop = max 0 (start - n) in
+	let stop = 0 in
 	
 	let rec aux (Node(trie_node, tag_info)) legacy_counts ix  =
 		let ((scount, tag_counts) as inherited_counts ) = match tag_info with
@@ -198,7 +201,7 @@ in
 let tagprobs  word  =
 
 	let start = (String.length word - 1) in
-	let stop = max 0 (start - n) in
+	let stop =  0 in
     let accu = Array.make (mx + 1) 0.0 in
 		
 	let rec aux (Node(trie_node, tag_info)) legacy_counts ix  =
@@ -208,12 +211,13 @@ let tagprobs  word  =
 				| _ -> legacy_counts 
 			in
 			let scount = float scount in
-			
+			(*
 			for i = 1 to mx  do
 				accu.(i) <- accu.(i) *. theta;
 			done;
-			
-			T.iter (fun tagid freq -> accu.(tagid) <- accu.(tagid) +. (float freq) /. scount ) tag_counts;	
+		*)
+			T.iter (fun tagid freq -> 
+				accu.(tagid) <- accu.(tagid) +. theta *. (float freq) /. scount ) tag_counts;	
 		
 			for i = 1 to mx  do
 				accu.(i) <- accu.(i) /. theta_plus_one
@@ -235,7 +239,8 @@ let tagprobs  word  =
 		(* to log, bayes inversion and search the maximum *)
 	let max = ref neg_infinity in
 	for i = 1 to mx  do
-		let prob = log accu.(i)  (*-. apriori_tag_prob.(i) *)  in
+(*		Printf.printf "P(t|w)=%f P(t)=%f P(w|t)=%f\n" (log accu.(i)) apriori_tag_prob.(i) (log accu.(i)  -. apriori_tag_prob.(i) );
+*)		let prob = log accu.(i)  -. apriori_tag_prob.(i)   in
 		accu.(i) <- prob;
 		if prob > !max then max := prob
 	done;

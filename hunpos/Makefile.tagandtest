@@ -1,18 +1,18 @@
 OCAMLMAKEFILE = ../../OCamlMakefile
 
 
-SOURCES = ngram.ml io.ml ngramtree.ml viterbi.ml morphtable.ml  suffix_guesser.ml  hmm_tagger.ml tagandtest.ml
+SOURCES = ngram.ml special_tokens.ml io.ml ngramtree.ml viterbi.ml morphtable.ml  suffix_guesser.ml  hmm_tagger.ml tagandtest.ml
 
 LIBS=ocautil
 LIBDIRS=../util
 INCDIRS=../util
-
+PACKS=str
 RESULT = tagandtest
 
 export OCAMLNCFLAGS := -unsafe 
-#all: nc
+all: nc
 #all: profiling-native-code
 #all: profiling-byte-code
-all:debug-code
+#all:debug-code
 include $(OCAMLMAKEFILE)
 
