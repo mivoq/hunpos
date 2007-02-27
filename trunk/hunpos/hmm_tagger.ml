@@ -89,7 +89,7 @@ let next obs =
 		*)
 		(* check whether we have lexikon info *)
 		try
-			let (obs_node, seen) = try (SNgramTree.move_to_child potree w, Seen) with Not_found ->
+			let (obs_node, seen) = try (SNgramTree.move_to_child potree w, Seen) with Not_found -> 
 								   try (SNgramTree.move_to_child potree lw, LowerCasedSeen) with Not_found ->
 								   (* megprobaljuk regexp szerint *)
 								   SNgramTree.move_to_child pstree (Special_tokens.to_lex w), SpecialToken
@@ -172,13 +172,11 @@ in
 
 let tag_sentence words  =
 
-	let print tog w =
-       (*State.print from; *)print_string "->"; State.print tog; print_char ' '; print_float w; print_newline()
-	in
+
 	let word2observation w = { word = w; seen = Seen; oov = false; anals = []; guessed = []} in
 
 	let observations = 	List.map (word2observation) (List.rev ( "<s>"::words))  in
-	let state_seq = StateViterbi.decode print next start_state observations in
+	let state_seq = StateViterbi.decode  next start_state observations in
 	( List.tl (List.rev  observations), List.tl (List.rev (List.map  (Ngram.newest) (state_seq))))
 		
  in tag_sentence

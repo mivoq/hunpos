@@ -1,6 +1,6 @@
 module SNgramTree = Ngramtree.Make(Mfhash.String)
-let emission_order = 3 
-let tag_order = 3
+let emission_order = 2 
+let tag_order = 2
 	
 let vocab = Vocab.create () 
 	
