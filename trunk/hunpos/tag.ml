@@ -1,6 +1,8 @@
 type heur = All | ShortestLemma | LongestLemma
 
 let ends_with suf s =
+	if String.length suf > String.length s then false
+	else
 	String.sub s (String.length s - String.length suf) (String.length suf)  = suf	
 
 let filter heur (lemmas: string list list) = 
@@ -55,7 +57,7 @@ let unique l =
   Visszaadja, hogy ismeretlen volt-e a szo, azaz a guessing mukodott-e.
 *)
 let block_anals anals tag = 
-	let anas = List.filter (ends_with tag) in
+	let anals = List.filter (ends_with tag) anals in
 	let isnotguessed  a = not (String.contains a '?') in
 	let isbasic a = not (String.contains a '+' || String.contains a '?') in
 	if List.exists isbasic anals  then (false, List.filter isbasic anals)  else
@@ -83,15 +85,25 @@ let parse_anal anal =
 
 let stem (hanal, lowercase, decompounding, guessing_on, oov_filter, known_filter) word tag =
     let anals = Morphtable.analyze hanal word in
-	
+	if word = "Medgyessyt" then
+		Printf.eprintf "anals: %s\n" (String.concat " " anals);
 	(* ocamorph neha duplumokat ad vissza*)
 	let anals = unique anals in 
 	
-	let anals = if lowercase then (List.map (String.lowercase) anals) else anals in
-	let (guessed, blocked_anals) = block_anals  anals tag in
-	if List.length blocked_anals = 0 then begin
-		Printf.eprintf "error: %s %s\n" word tag 
+	let tag = String.lowercase tag in
+	let lowercased_anals = if lowercase then (List.map (String.lowercase) anals) else anals in
+		
+	let (guessed, blocked_anals) = block_anals  lowercased_anals tag in
+		if word = "Medgyessyt" then begin
+		Printf.eprintf "blocked anals: %s\n" (String.concat " " blocked_anals);
 end;
+
+	let (guessed, blocked_anals) = 
+	if List.length blocked_anals = 0 then 
+		block_anals lowercased_anals "" 
+	else
+		(guessed, blocked_anals)
+	in	
 	let lemmas =
         if (List.length blocked_anals = 0) || guessed && (not guessing_on) then 
 			(* ha guessed, de nem kertek guessinget, akkor a szo maga a lemma *)

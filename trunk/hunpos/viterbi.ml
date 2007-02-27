@@ -25,7 +25,7 @@ module Make (M : Amap.S)  = struct
 type state = M.key
 type node = {state : state ; mutable from : node option; mutable weight : float }
 
-let decode hmm start_state observations =
+let decode print hmm start_state observations =
 		
 	let step_forward current_nodes obs =
 		let (transition_prob, emission_prob) = hmm obs in
@@ -62,7 +62,7 @@ let decode hmm start_state observations =
 						if node.weight > !max then max:=node.weight ;
 						) next_nodes ;
 				
-			let logtheta = log 100.0 in
+			let logtheta = log 10000.0 in
 			let rec filter l acc = match l with
 	             h::t -> let acc = if h.weight < (!max -. logtheta) then acc else h::acc in
 						filter t acc

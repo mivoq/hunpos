@@ -15,6 +15,12 @@ let rec compare ngram1 ngram2 n =
 		| (t::_ , [] ) -> 1
 		| ([], t::_)  -> -1
 	
+let rec print ngram n print_fun =
+
+	match ngram with
+		head::tail when n > 0 -> print tail (n-1) print_fun; print_char '@'; print_fun head
+		| _ -> ()
+;;
 let equal ngram1 ngram2 n =
 	(compare ngram1 ngram2 n) = 0
 	

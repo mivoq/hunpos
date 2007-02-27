@@ -91,6 +91,19 @@ let read_tagged_sentence chan =
 	in
 	aux ([]) ([]) false
 	
+let read_fielded_sentence chan =
+	let rec aux acc read=
+		try 
+		let fields = Parse.split2 '\t' (input_line chan) in
+		match fields with
+			word :: r when (String.length word) > 0 -> 
+			
+				aux (fields :: acc)  true
+			| _ -> acc
+		with End_of_file -> if read then acc else raise End_of_file
+	in
+	aux [] false
+	
 let read_sentence chan =
 	let rec aux wacc read=
 		try 
@@ -118,6 +131,13 @@ let iter_sentence chan f =
 		done;
 	with End_of_file -> ()
 	
+let iter_fielded_sentence chan f =
+	try
+		while(true) do
+			f (read_fielded_sentence chan)
+		done;
+	with End_of_file -> ()
+	
 (*
 
 (* vegigmegy a chan minden mondatan is atadja az f-nek*)
@@ -140,3 +160,26 @@ let rec fold_tagged_sentence f a chan =
 	 	fold_tagged_sentence f (f a sentence) chan
 	with End_of_file -> a
 
+external unsafe_get : string -> int -> char = "%string_unsafe_get"
+external unsafe_set : string -> int -> char -> unit = "%string_unsafe_set"
+
+(** Return a copy of the argument, with all uppercase letters
+   translated to lowercase, including accented letters of the ISO
+   Latin-1 (8859-1) character set.
+
+   And return true iif the original string had any uppercase charater.
+ *)
+let lowercase s =
+	let changed = ref false in
+	let l = String.length s in
+	if l = 0 then (s, false) else begin
+		let r = String.create l in
+	    for i = 0 to l - 1 do
+		 	let c = unsafe_get s i in
+			let c' = Char.lowercase c in
+			unsafe_set r i c';
+			if not !changed && c != c' then
+			 changed := true
+		done;
+        (r, !changed)
+	 end
