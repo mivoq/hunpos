@@ -103,15 +103,24 @@ let theta tagtree =
 	let total = float (SNgramTree.freq tagtree) in
 	
 	let pow n = n *. n in
-	let s = ref 0 in
+	let s = ref (-1) in (* <s> -t nem szamoljuk *)
 	SNgramTree.iter_level 1 (fun tag freq -> incr s) tagtree;
 	let s = float (!s) in
-	let p_av = 1.0 /. s in   (*-- use uniform distribution over tag-probs *)
+	(*let p_av = 1.0 /. s in   (*-- use uniform distribution over tag-probs *)
+	*)
+	let p_av = ref 0.0 in
+	SNgramTree.iter_level 1  (fun tag tagfreq ->
+			 			 if List.hd tag != "<s>" then
+						 let tagp =  (float) tagfreq /. total in
+	                     p_av := !p_av +. (tagp *. tagp) ) tagtree;
+		
+	let p_av = !p_av in	
 	let theta = ref 0.0 in
-	SNgramTree.iter_level 1  (fun tag tagfreq -> 
+	SNgramTree.iter_level 1  (fun tag tagfreq ->
+		 			 if List.hd tag != "<s>" then
 					 let tagp =  (float) tagfreq /. total in
-                     theta := !theta +.  pow (tagp -. p_av) ) tagtree;
-	sqrt(!theta /. (s -. 1.))
+                     theta := !theta +.  tagp *.pow (tagp -. p_av) ) tagtree;
+	sqrt(!theta )
 
 
 
