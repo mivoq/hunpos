@@ -1,8 +1,10 @@
 module SNgramTree = Ngramtree.Make(Mfhash.String)
+module SMap = Map.Make(String)
+
 type seen_type = Seen | LowerCasedSeen | SpecialToken | UnSeen
 
 type observation = {word : string;
- 			
+ 					mutable is_first : bool; (* eleg ronda hack arra, h az elso szot kisbetusithessuk *)
 					mutable seen : seen_type; 
 					mutable oov : bool; 
 					mutable anals : string list;
@@ -42,8 +44,8 @@ let load filename   morphtable tag_order emission_order =
 	let theta = Suffix_guesser.theta ttree in
 	prerr_string "theta = "; prerr_float theta; prerr_newline ();
 	
-	let (ltagprob, ltagprobs) = Suffix_guesser.guesser_from_trie lsuffix_trie ttree theta 100. vocab  in
-	let (utagprob, utagprobs) = Suffix_guesser.guesser_from_trie usuffix_trie ttree theta 100. vocab  in
+	let (ltagprob, ltagprobs) = Suffix_guesser.guesser_from_trie lsuffix_trie ttree theta 1000. vocab  in
+	let (utagprob, utagprobs) = Suffix_guesser.guesser_from_trie usuffix_trie ttree theta 1000. vocab  in
 	
 let module State = struct
 	type t = string Ngram.t
@@ -90,7 +92,10 @@ let next obs =
 		(* check whether we have lexikon info *)
 		try
 			let (obs_node, seen) = try (SNgramTree.move_to_child potree w, Seen) with Not_found -> 
-								   try (SNgramTree.move_to_child potree lw, LowerCasedSeen) with Not_found ->
+								   try if obs.is_first && is_upper then
+										(SNgramTree.move_to_child potree lw, LowerCasedSeen) 
+										else raise Not_found
+									with Not_found ->
 								   (* megprobaljuk regexp szerint *)
 								   SNgramTree.move_to_child pstree (Special_tokens.to_lex w), SpecialToken
 			
@@ -162,9 +167,10 @@ let next obs =
 					(next_state, (tp )) 
 				) tags_probs			
 				in
+				let tags_probs = List.fold_left (fun m (tag, prob) -> SMap.add tag prob m) SMap.empty tags_probs in
 				let emission state =
 					let tag = List.hd state in
-						List.assoc tag tags_probs 
+						SMap.find tag tags_probs 
 				in
 				(transition, emission)		
 in		
@@ -173,9 +179,11 @@ in
 let tag_sentence words  =
 
 
-	let word2observation w = { word = w; seen = Seen; oov = false; anals = []; guessed = []} in
+	let word2observation w = { word = w; is_first=false; seen = Seen; oov = false; anals = []; guessed = []} in
 
-	let observations = 	List.map (word2observation) (List.rev ( "<s>"::words))  in
+	let first::observations = 	List.map (word2observation) (List.rev ( "<s>"::words))  in
+	first.is_first <- true;
+	let observations = first :: observations in
 	let state_seq = StateViterbi.decode  next start_state observations in
 	( List.tl (List.rev  observations), List.tl (List.rev (List.map  (Ngram.newest) (state_seq))))
 		
