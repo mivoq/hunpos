@@ -37,8 +37,8 @@ let iter f m =
 let fold f acc m =
 	OMap.fold f  m.contents acc
 	
-
-	
+let update_all m f =
+    m.contents <- (OMap.mapi f m.contents)  
 end
 
 module Int = Make (struct  type t = int 

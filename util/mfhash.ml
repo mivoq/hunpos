@@ -13,11 +13,12 @@ module type S =
     val fold : (key -> 'a -> 'b -> 'b) -> 'b -> 'a t  -> 'b
 	val sorted_iter : (key -> key -> int) -> (key -> 'a -> unit) -> 'a t -> unit 
     val print_bucket_stat : 'a t -> unit 
-	val find : 'a t -> key -> 'a
+	val find : 'a t -> key -> 'a 
 	val find_save : 'a t -> key -> 'a
 	val find_or_add : 'a t-> key -> (unit -> 'a) -> 'a
 	val add_or_replace : 'a t -> key -> 'a -> unit
 	val update : 'a  t ->  key -> (unit -> 'a)   -> ('a -> 'a) -> 'a  
+	val update_all: 'a t -> (key -> 'a -> 'a) -> unit
 	val size : 'a t -> int
   end
 
@@ -126,7 +127,21 @@ let iter f h =
     do_bucket d.(i)
   done
 
+let update_all h f =
 
+  let rec do_bucket = function
+      Empty ->
+        ()
+    | Cons(node) ->
+       node.value <- f node.key node.value; 
+	   do_bucket node.next 
+  in
+  let d = h.data in
+  for i = 0 to Array.length d - 1 do
+    do_bucket d.(i)
+  done
+
+	
 let fold f accu h =
  	let accu = ref accu in
 	iter (fun k v -> accu := f k v !accu) h;
