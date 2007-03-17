@@ -1,13 +1,13 @@
 OCAMLMAKEFILE = ../../OCamlMakefile
 
-SOURCES = io.ml special_tokens.ml ngramtree.ml  suffix_guesser.ml train.ml
+SOURCES = io.ml ngram.ml morphtable.ml special_tokens.ml lexicon.ml linear_interpolated_lm.ml ngramtree.ml  suffix_guesser.ml viterbi.ml hmm_tagger.ml train.ml
 
 RESULT = train
 LIBS=ocautil
 LIBDIRS=../util
 INCDIRS=../util
 PACKS=str
-export OCAMLNCFLAGS := -unsafe -inline 100 
+export OCAMLNCFLAGS :=  -inline 100 
 all: native-code
 #all: debug-code
 #all: profiling-byte-code

@@ -14,12 +14,15 @@ let rec iter3 f l1 l2 l3 =
 let eval obs gtags tags = 
 	let eval_token obs gold tag = 
  		(* ha benne van a modell lexikonjában, akkor látott szó *)
-
+	
 		let seen = match  obs.Hmm_tagger.seen with Hmm_tagger.Seen -> 0 | _-> 1 in
 		let oov = if obs.Hmm_tagger.oov then 1 else 0 in
-		total_matrix.(seen).(oov) <- total_matrix.(seen).(oov) +1 ;  
-		if (compare gold tag) != 0 then
+		total_matrix.(seen).(oov) <- total_matrix.(seen).(oov) +1 ; 
+		if (compare gold tag) != 0 then begin
 			false_matrix.(seen).(oov) <- false_matrix.(seen).(oov) + 1;
+		(*	if oov = 1 && seen == 1 then
+				Printf.printf "%s %s\n" obs.Hmm_tagger.word tag
+		*) end
 		in
 	iter3 eval_token obs gtags tags
 		
@@ -35,7 +38,7 @@ let falses = ref 0
 	
 
 let usage () = 
-	Printf.eprintf "usage : %s  modelfile morphtable [tag-order [emission-order]] \n" Sys.argv.(0)
+	Printf.eprintf "usage : %S  modelfile morphtable [tag-order [emission-order]] \n" Sys.argv.(0)
 ;;
 
 let _ =	
@@ -52,9 +55,11 @@ let emorder =
 	if (Array.length Sys.argv) > 4 then (int_of_string Sys.argv.(4)) else 2
 in	
 let hunmorph = Morphtable.load Sys.argv.(2) in
-
-let tagger = Hmm_tagger.load Sys.argv.(1)   hunmorph tagorder emorder in
-
+prerr_endline "morphtable loadad";
+let model = Hmm_tagger.load Sys.argv.(1) in
+	prerr_endline "model loadad";
+let tagger = Hmm_tagger.compile_tagger  model hunmorph tagorder emorder in
+prerr_endline "tagger compiled";
 let ic =  stdin in
 	
 

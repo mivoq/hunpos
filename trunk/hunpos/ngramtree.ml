@@ -19,7 +19,7 @@ type 'a t = {mutable freq   : 'a ;
 type gram = M.key 
 
 let empty () = {freq = 0; childs = None}
-	
+
 let rec add (t: int t) ngram n =
 
 	t.freq <- t.freq + 1;

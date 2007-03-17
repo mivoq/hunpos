@@ -1,5 +1,5 @@
 type 'a t = 'a list 
-let gram_compare = String.compare
+let gram_compare = compare
 let gram_hash = Hashtbl.hash
 		
 let empty = []

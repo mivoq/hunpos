@@ -18,8 +18,8 @@ let matching r s  =
 	
 let to_lex w = 
 	let rec aux patterns = match patterns with
-		| [] -> w
-		| (name,pattern)::tail -> if matching pattern w then name
+		| [] -> (false, w)
+		| (name,pattern)::tail -> if matching pattern w then (true, name)
 								 else aux tail
 	in
 	aux patterns

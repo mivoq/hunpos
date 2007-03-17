@@ -19,11 +19,13 @@ module Make(M: Amap.S) : (S with type state =  M.key) = struct
 					   let equal n1 n2 = Ngram2.equal n1 n2 2
 					   end)
 *)					
-
 module Make (M : Amap.S)  = struct
 	
 type state = M.key
 type node = {state : state ; mutable from : node option; mutable weight : float }
+
+let logtheta = log 100.0 
+
 
 let decode  hmm start_state observations =
 		
@@ -62,7 +64,7 @@ let decode  hmm start_state observations =
 						if node.weight > !max then max:=node.weight ;
 						) next_nodes ;
 				
-			let logtheta = log 100.0 in
+
 			let rec filter l acc = match l with
 	             h::t -> let acc = if h.weight < (!max -. logtheta) then acc else h::acc in
 						filter t acc

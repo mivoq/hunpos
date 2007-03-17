@@ -1,3 +1,4 @@
-let a = Array.create 5 (Obj.magic 0) ;;
-a.(1) <- "ablak";
-print_string a.(1);
+let _ =
+	let s = "hello" in
+	let s2 = "world" in
+	Printf.printf "%s, %s" s s2;
