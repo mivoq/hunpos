@@ -11,4 +11,5 @@ module type S =
 	val iter :  (key -> 'a -> unit) -> 'a t ->  unit
     val fold : (key -> 'a -> 'b -> 'b) -> 'b -> 'a t -> 'b
 	val update_all: 'a t -> (key -> 'a -> 'a) -> unit
+	val size : 'a t -> int
   end

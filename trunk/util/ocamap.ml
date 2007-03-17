@@ -38,7 +38,13 @@ let fold f acc m =
 	OMap.fold f  m.contents acc
 	
 let update_all m f =
-    m.contents <- (OMap.mapi f m.contents)  
+    m.contents <- (OMap.mapi f m.contents)
+
+let size m =
+	let s = ref 0 in	
+	OMap.iter (fun x y -> incr s) m.contents;
+	!s
+	  
 end
 
 module Int = Make (struct  type t = int 
