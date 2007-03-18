@@ -44,7 +44,7 @@ let usage () =
 let _ =	
 
 if (Array.length Sys.argv) < 3 then 
-	let _ = usage () in	exit 1 
+	let _ = usage () in	() (*exit 1*) 
 else
 	
 let tagorder =

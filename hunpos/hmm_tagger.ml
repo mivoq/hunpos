@@ -318,7 +318,7 @@ let next obs =
 				(* lekerdezzuk a suffix guessertol a tagid->prob parokat *)
 				
 				let max_value = tagprobs  (lw) suffix_accu in
-				let min_value = max_value -. log 1000. in
+				let min_value = max_value -. log 100. in
 				(* listaba tesszuk, ami megfelel nekunk *)
 				let rec aux acc ix =
 					if ix <0 then acc else 
