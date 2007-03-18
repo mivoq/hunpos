@@ -11,8 +11,8 @@ RESULT = tagandtest
 
 export OCAMLNCFLAGS := -inline 100 
 #all: nc
-#all: profiling-native-code
-all: profiling-byte-code
+all: profiling-native-code
+#all: profiling-byte-code
 #all:debug-code
 include $(OCAMLMAKEFILE)
 
