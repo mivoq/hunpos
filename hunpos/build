@@ -1,0 +1,2 @@
+#!/bin/sh 
+ocamlbuild -libs str,ocautil -cflags -I,../../util/_build -lflags -I,../../util/_build $*

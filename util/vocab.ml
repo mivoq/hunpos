@@ -3,7 +3,7 @@ module IHash = Mfhash.Int
 
 type t = (int SHash.t * string IHash.t * int ref )
 
-let create () = (SHash.empty (), IHash.empty (),  ref 1)
+let create () = (SHash.empty (), IHash.empty (),  ref 0)
 	
 let toindex (word2id, id2word, max) w =
 	let id = SHash.find_or_add word2id w (fun () -> !max) in
@@ -22,4 +22,3 @@ let ngram_toindex vocab ngram =
 	
 let max (_, _, max) = !max
 	
-let null = 0 
