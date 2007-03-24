@@ -64,13 +64,14 @@ let decode  hmm start_state observations =
 						if node.weight > !max then max:=node.weight ;
 						) next_nodes ;
 				
-
 			let rec filter l acc = match l with
 	             h::t -> let acc = if h.weight < (!max -. logtheta) then acc else h::acc in
 						filter t acc
 			 | [] -> acc
 			in
-			filter next_nodes []
+			let next_nodes = filter next_nodes [] in
+				
+			next_nodes
 	in
 	let  start_node = {state = start_state; from = None; weight = 0.0} in
 	let end_nodes = List.fold_left step_forward (start_node::[]) observations in

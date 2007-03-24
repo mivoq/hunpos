@@ -1,2 +1,2 @@
 #!/bin/sh 
-ocamlbuild -libs str,ocautil -cflags -I,../../util/_build -lflags -I,../../util/_build $*
+ocamlbuild -ocamlopt /usr/local/ocaml/9.3/bin/ocamlopt -ocamlc /usr/local/ocaml/9.3/bin/ocamlc -libs str,ocautil -cflags -I,../../util/_build -lflags -I,../../util/_build $*
