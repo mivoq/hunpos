@@ -4,6 +4,7 @@ let patterns = [("@CARD"        , "^[0-9]*$"        );
 	           ("@CARDPUNCT"  , "^[0-9]+\\.$"      );
 			   ("@CARDSEPS"    , "^[0-9\\.,:-]+[0-9]+$");
 			   ("@CARDSUFFIX" , "^[0-9]+[a-zA-Z][a-zA-Z]?[a-zA-Z]?$"  );
+			   ("@HTMLENTITY" , "^&[^;]+;?$"  );
 			  ]
 ;;			
 let patterns = List.map (fun (name, pattern) -> (name, Str.regexp pattern)) patterns;;
