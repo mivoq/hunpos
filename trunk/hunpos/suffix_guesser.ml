@@ -152,7 +152,7 @@ let guesser_from_trie trie apriori_tag_probs theta  =
 		let accu = ref 0.0 in
 		let roll_prob suff_count tag_counts =
 			let tag_prob = try (float (T.find  tagid tag_counts)) /. suff_count with Not_found -> 0.0 in
-	        accu := (!accu  +. (tag_prob *. theta)) /. theta_plus_one 
+	        accu := (!accu     +. (tag_prob *. theta)) /. theta_plus_one 
 
 		in
 		trie_iterator word roll_prob;
@@ -168,44 +168,19 @@ let guesser_from_trie trie apriori_tag_probs theta  =
 		let start = (String.length word - 1) in
 		let stop =  0 in
 
-
-		let rec aux (Node(trie_node, tag_info)) legacy_counts ix  =
-
-				let ((scount, tag_counts) as inherited_counts ) = match tag_info with
-					Some(x) -> x
-					| _ -> legacy_counts 
+		let roll_prob suff_count tag_counts =
+				let calc_tag_prob tagid freq =
+					let tag_prob = float freq /. suff_count in
+					accu.(tagid) <- (accu.(tagid) +. (tag_prob  *. theta )) /. theta_plus_one;
 				in
-				let scount = float scount in
-				(*
-				for i = 1 to mx  do
-					accu.(i) <- accu.(i) *. theta;
-				done;
-			*)
-				T.iter (fun tagid freq -> 
-					accu.(tagid) <- accu.(tagid) +. theta *. (float freq) /. scount ) tag_counts;	
-
-				for i = 0 to (Array.length accu) - 1  do
-					accu.(i) <- accu.(i) /. theta_plus_one
-				done;
-
-
-				if ix >= stop then
-
-				match trie_node with
-					Terminal -> ()
-	                | OneChild(c, child) -> if c = word.[ix] then aux child  inherited_counts (ix - 1) 
-
-					|Branch(childs) -> try 
-										let child = C.find word.[ix] childs in
-										aux child  inherited_counts (ix - 1) 
-									  with Not_found -> ()
+				T.iter (calc_tag_prob) tag_counts;	
 		in
-		aux trie (0, T.empty) start;
-			(* to log, bayes inversion and search the maximum *)
+		trie_iterator word roll_prob;
+		(* to log, bayes inversion and search the maximum *)
 		let max = ref neg_infinity in
 		for i = 0 to (Array.length accu - 1)  do
-	(*		Printf.printf "P(t|w)=%f P(t)=%f P(w|t)=%f\n" (log accu.(i)) apriori_tag_prob.(i) (log accu.(i)  -. apriori_tag_prob.(i) );
-	*)		let prob = log accu.(i)  -. log apriori_tag_probs.(i)   in
+	(*		Printf.printf "P(t|w)=%f P(t)=%f P(w|t)=%f\n" (log accu.(i)) apriori_tag_probs.(i) (log accu.(i)  -. log apriori_tag_probs.(i) );
+	*)		let prob = log accu.(i)    -. log apriori_tag_probs.(i)    in
 			accu.(i) <- prob;
 			if prob > !max then max := prob
 		done;

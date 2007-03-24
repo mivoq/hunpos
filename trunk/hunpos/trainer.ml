@@ -18,11 +18,14 @@ let chan = open_in Sys.argv.(1) in
 let model = Hmm_tagger.start_train 2 2 in
 prerr_endline "reading training corpus";
 Io.iter_tagged_sentence chan (Hmm_tagger.add_sentence model);
-prerr_endline "compiling probabilities";
-Hmm_tagger.calculate_probs model;
-(*)
+(*Hmm_tagger.save model Sys.argv.(2);
+
 let model = Hmm_tagger.load Sys.argv.(2) in
 *)
+prerr_endline "compiling probabilities";
+Hmm_tagger.calculate_probs model;
+
+
 prerr_endline "constructing suffix guesser";
 Hmm_tagger.build_suffixtries model 10 10;
 

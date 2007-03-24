@@ -41,8 +41,11 @@ in
 let emorder =
 	if (Array.length Sys.argv) > 4 then (int_of_string Sys.argv.(4)) else 2
 in	
-let tagmorph = Morphtable.load Sys.argv.(2) in
-let tagger = Hmm_tagger.load Sys.argv.(1)   tagmorph tagorder emorder in
+let hunmorph = Morphtable.load Sys.argv.(2) in
+let model = Hmm_tagger.load Sys.argv.(1) in
+prerr_endline "model loadad";
+let tagger = Hmm_tagger.compile_tagger  model hunmorph tagorder emorder in
+prerr_endline "tagger compiled";
 
 let ic =  stdin in
 

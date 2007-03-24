@@ -14,7 +14,6 @@ let rec iter3 f l1 l2 l3 =
 let eval obs gtags tags = 
 	let eval_token obs gold tag = 
  		(* ha benne van a modell lexikonjában, akkor látott szó *)
-	
 		let seen = match  obs.Hmm_tagger.seen with Hmm_tagger.Seen -> 0 | _-> 1 in
 		let oov = if obs.Hmm_tagger.oov then 1 else 0 in
 		total_matrix.(seen).(oov) <- total_matrix.(seen).(oov) +1 ; 

@@ -19,6 +19,7 @@ end )
 module ObsLexicon = Lexicon.Make(Mfhash.String)
 
 let eos_tag = "</s>"
+let bos_tag = "<s>"
 	
 type model = {
   			  tag_order : int ;
@@ -33,6 +34,7 @@ type model = {
 			  mutable low_suffixes: Suffix_guesser.t;
 			  mutable upp_suffixes: Suffix_guesser.t;
 			  eos : int;
+			  bos : int;
 			  mutable apriori_tag_probs : float array;
 			  mutable theta : float
 }
@@ -47,6 +49,7 @@ type train_stat = {
 let start_train tag_order emission_order =
 	let tag_vocab = Vocab.create () in
 	let eos_ix = Vocab.toindex tag_vocab eos_tag in
+	let bos_ix = Vocab.toindex tag_vocab bos_tag in
 	let m = {
 		tag_order = tag_order;
 		emission_order = emission_order;
@@ -59,6 +62,7 @@ let start_train tag_order emission_order =
 		low_suffixes = Suffix_guesser.empty ;
 		upp_suffixes = Suffix_guesser.empty ;
 		eos  = eos_ix;
+		bos = bos_ix;
 		apriori_tag_probs = Array.make 0 0.0;
 		theta = 0.0;
 	
@@ -77,23 +81,25 @@ let start_train tag_order emission_order =
 	
 let add_sentence (m, stat) (words, tags) =
 		stat.sentences <- stat.sentences + 1;
-	
+		
 		(* atallunk intekre *)
 		let tags = List.map (Vocab.toindex m.tag_vocab) tags in
 		(* biztos, ami biztos, zaro *)
 	    m.tag_lm <- TagProbLM.add_word m.tag_lm tags m.tag_order m.eos;
-	
+		let tags = tags @ (m.bos :: []) in
+		let words = words @ ("<S>" :: []) in
+			
 		let rec aux words tags = match words, tags with
-			(word::word_tails),
+			wbos::[], tbos::[] -> (* bos-t nem kell betenni *) ()
+			| (word::word_tails),
 			(tag::tag_tails)   ->
 				stat.tokens <- stat.tokens + 1;
-				
 				ObsLexicon.add_word_tag m.obs_lex word tag;	
 				m.tag_lm <- TagProbLM.add_word m.tag_lm tag_tails m.tag_order tag;
-                m.obs_lm <- ObsProbLM.add_word m.obs_lm tag_tails m.emission_order word;
+			    m.obs_lm <- ObsProbLM.add_word m.obs_lm tags m.emission_order word;
 				let (is_spec, name) = Special_tokens.to_lex word in
 				if is_spec then begin
-					m.spec_lm <- ObsProbLM.add_word m.spec_lm tag_tails m.emission_order name;
+					m.spec_lm <- ObsProbLM.add_word m.spec_lm tags 2 name;
 					ObsLexicon.add_word_tag m.spec_lex word tag;
 				end;	
 				aux word_tails tag_tails
@@ -105,26 +111,43 @@ let add_sentence (m, stat) (words, tags) =
 let calculate_probs (m,stat) =
 	(* apriori cimke valoszinusegek szamitasa *)
 	let total_freq = TagProbLM.total_context_freq m.tag_lm in
-	let tag_types  = TagProbLM.word_count_at_context m.tag_lm in
-	m.apriori_tag_probs <- Array.make (tag_types) neg_infinity;
-	TagProbLM.iter_words (fun tag freq -> m.apriori_tag_probs.(tag) <-  ( freq /. total_freq)) m.tag_lm;	
+	Printf.printf "total_freq = %f\n" total_freq;
+	let tag_types  = Vocab.max m.tag_vocab in
+	Printf.printf "tagtypes: %d\n" tag_types;
+	m.apriori_tag_probs <- Array.make (tag_types) 0.0;
+	TagProbLM.iter_words (fun tag freq -> 
+		try m.apriori_tag_probs.(tag) <-  ( freq /. total_freq) with _ -> Printf.printf "error %d %s\n" tag (Vocab.toword m.tag_vocab tag)) m.tag_lm;	
 	
 	prerr_endline "apriori tag probs calculated";
 	
+
+	let tag_noun_pl = Vocab.toindex m.tag_vocab "NOUN<PLUR>" in
+	let tag_art = Vocab.toindex m.tag_vocab "ART" in
+	let tag_s = Vocab.toindex m.tag_vocab "<s>" in
+		 
+	
+	let freqs = TagProbLM.freqs m.tag_lm tag_noun_pl (tag_art::tag_s::[]) in
+	let print_freq_pair (wfreq, cfreq) =
+		Printf.printf " %f / %f" wfreq cfreq 
+	in
+	List.iter (print_freq_pair) freqs;
 	
 	
 	let tlambdas = TagProbLM.calculate_lambdas m.tag_lm m.tag_order in
 	prerr_endline "tag lambdas calculated";
-   (* Array.iteri (fun i v -> Printf.eprintf "%d = %f\n" i v) tlambdas;
- *)
+    Array.iteri (fun i v -> Printf.eprintf "%d = %f\n" i v) tlambdas;
+ 
 	let olambdas = ObsProbLM.calculate_lambdas m.obs_lm m.emission_order in
 	prerr_endline "observation lambdas calculated";
-(*	Array.iteri (fun i v -> Printf.eprintf "%d = %f\n" i v) olambdas;
-*)	
-	let slambdas = ObsProbLM.calculate_lambdas m.spec_lm m.emission_order in
+	Array.iteri (fun i v -> Printf.eprintf "%d = %f\n" i v) olambdas;
+	
+	
+
+	
+	let slambdas = ObsProbLM.calculate_lambdas m.spec_lm 1 in
 	prerr_endline "spec token lambdas calculated";
-(*)	Array.iteri (fun i v -> Printf.eprintf "%d = %f\n" i v) slambdas;
-*)	
+	Array.iteri (fun i v -> Printf.eprintf "%d = %f\n" i v) slambdas;
+	
 	 
 	TagProbLM.counts_to_prob m.tag_lm tlambdas;
 	prerr_endline "tag probs calculated";
@@ -132,6 +155,10 @@ let calculate_probs (m,stat) =
 	prerr_endline "observation probs calculated";
 	ObsProbLM.counts_to_prob m.spec_lm slambdas;
 	prerr_endline "spec token probs calculated";
+	
+	Printf.printf "P(NOUN<PLUR> | S ART) = %f\n" (TagProbLM.wordprob m.tag_lm tag_noun_pl (tag_art::tag_s::[]));
+	Printf.printf "P(NOUN<PLUR> |  ART) = %f\n" (TagProbLM.wordprob m.tag_lm tag_noun_pl (tag_art::[]));
+	
 ;;
 
 let build_suffixtries (m,stat) maxfreq maxlength =
@@ -159,7 +186,8 @@ let build_suffixtries (m,stat) maxfreq maxlength =
 	in
 	
 	ObsLexicon.iter do_word m.obs_lex;
-
+	prerr_int stat.rare_low; prerr_string " lowercase, ";
+	prerr_int stat.rare_upp; prerr_endline " uppercase ";
 	(* theta szamolasa *)
 	m.theta <- Suffix_guesser.calculate_theta m.apriori_tag_probs;
 	prerr_string "theta = "; prerr_float m.theta; prerr_newline();
@@ -202,7 +230,8 @@ let compile_tagger (m, stat) morphtable tag_order emission_order =
 let module State = struct
 	type t = int Ngram.t
 	let compare ng1 ng2  = Ngram.compare ng1 ng2 tag_order
-	let print ngram = Ngram.print ngram tag_order (print_int)
+	let print ngram = Ngram.print ngram tag_order 
+		(fun i -> if i = -1 then print_string "<s>"  else print_string (Vocab.toword m.tag_vocab i))
 end 
 in
 
@@ -213,7 +242,7 @@ in
 
 let start_state = 
 	let rec aux n l = if n < 0 then l 
-		              else aux (n - 1) (TagProbLM.bos :: l) 
+		              else aux (n - 1) (m.bos :: l) 
 	in aux tag_order []
 in
 
@@ -224,15 +253,48 @@ let end_of_sentence =
 	(transition, emission)
 in
 
+(* fogja a feltoltott suffix_accu -t es abbol kivalaszt nehanyat, amivel tovabb
+	megyunk. Most veszi az elso 20-t, amik azert minnel nagyobbak. *)
+let k = 200 in
+let suf_theta = log 1000. in
+let prune_guessing max =
+	let min = max -. suf_theta in
+	let l = ref [] in
+	let n = ref 0 in
+	(* az eleg nagy sulyu elemek kivalasztasa *)
+	let add_to_list tag w =
+		if w > min then begin
+			incr n;
+			l := (tag, w) :: !l
+		end
+	in
+	Array.iteri (add_to_list) suffix_accu;
+	if !n < k then !l
+	else
+	(* ha tobb, mint k elem lett, akkor vesszuk az elso k-t *)
+	let compare (_, w1) (_, w2) = compare w2 w1 in
+	let sorted = List.sort compare !l in
+	l := [];
+	n := 0;
+	let rec aux sorted acc =
+		match sorted with
+			h::t when !n < k -> incr n; aux t (h :: acc)
+		  | _ -> acc
+	in
+	aux sorted []
+in
+	
 let next obs =
 		let w = obs.word in
 		(* this is the end of sentence token; calculating only transition probs *)
 		if w = "<s>" then
 			end_of_sentence
 		else 
+		begin
+		let debug = false in
 		(* has any uppercased char? *)
 		let (lw, is_upper) = Io.lowercase w in
-		
+	
 		(* is it known words? *)	
 		let (oov, anals) = try (false, Morphtable.analyze morphtable ( w)) 
 						   with Not_found -> (true, []) in
@@ -273,17 +335,29 @@ let next obs =
 							
 							let next_state = Ngram.add tag from in
 							let tp = TagProbLM.wordprob m.tag_lm tag from in
+								
+									if debug then begin
+									print_string w; print_char ' '; print_string (Vocab.toword m.tag_vocab tag); print_newline();
+									let _ = State.print from ; print_string "->"; State.print next_state in
+									print_float tp ; print_newline ()
+									end;
+									
 							(next_state, (tp )) 
 				) tags
 			in
 			let emission state =
-				wordprob state
+				let p = wordprob state in
+				if debug then begin
+					print_string "emission: "; State.print state; print_string " ->" ; 
+					print_string w; print_char ' '; print_float p; print_newline () 
+				end;
+				p
+				
 			in
 			(transition, emission)		
 					
 		with Not_found -> (* not seen word *)
 			obs.seen <- UnSeen;
-			
 			let anals2transtion_fun anals =
 				let transition from = List.map (fun tag  ->
 						let tagid = Vocab.toindex m.tag_vocab tag in
@@ -311,34 +385,28 @@ let next obs =
 						let tag = List.hd state in
 						try 
 						tagprob lw tag 
-						with Not_found -> Printf.eprintf "new tag for %s" w; -99.0
+						with Not_found -> (*Printf.eprintf "new tag for %s" w;*) -99.0
 						in
 					(transition, emission)
-				else
+				else begin
 				(* lekerdezzuk a suffix guessertol a tagid->prob parokat *)
-				
 				let max_value = tagprobs  (lw) suffix_accu in
-				let min_value = max_value -. log 100. in
-				(* listaba tesszuk, ami megfelel nekunk *)
-				let rec aux acc ix =
-					if ix <0 then acc else 
-					if suffix_accu.(ix) > min_value then aux ((ix) :: acc) (ix - 1)
-					else aux acc (ix - 1)
-				in
-				let possible_tags = aux [] (suffix_accu_length - 1) in
-						
+				let pruned_guessing = prune_guessing max_value in
+				
 				let transition 	from = 
-					List.map (fun (tagid) -> 
+					List.map (fun (tagid,w) -> 
 							let next_state = Ngram.add tagid from in
 							let tp = TagProbLM.wordprob m.tag_lm tagid from in
 					(next_state, (tp )) 
-				) possible_tags			
+				) pruned_guessing			
 				in
 				let emission state =
 					let tagid = List.hd state in
 					suffix_accu.(tagid); 
 				in
-				(transition, emission)		
+				(transition, emission)
+			end
+		end		
 in		
 		
 
@@ -356,3 +424,69 @@ let tag_sentence words  =
 	( List.tl (List.rev  observations), List.tl (List.rev  (state_seq)))
 		
  in tag_sentence
+
+(*
+let _ =
+
+
+let (m, stat) = load Sys.argv.(1) in
+prerr_endline "model loadad";
+
+(* kicsit szopatjuk magunkat *)
+let word = "Nem" in
+let tag_utt = Vocab.toindex m.tag_vocab "UTT-INT" in
+let tag_bos = -1 in
+Printf.printf "P(Nem) = %f\n" (ObsProbLM.wordprob m.obs_lm word ([]) );
+Printf.printf "P(Nem | UTT_INT) = %f\n" (ObsProbLM.wordprob m.obs_lm word (tag_utt::[]) );
+Printf.printf "P(Nem | S UTT_INT) = %f\n" (ObsProbLM.wordprob m.obs_lm word (tag_utt::tag_bos::[]) );
+
+let tag_adv = Vocab.toindex m.tag_vocab "ADV" in
+	Printf.printf "P(Nem | ADV) = %f\n" (ObsProbLM.wordprob m.obs_lm word (tag_adv::[]) );
+	Printf.printf "P(Nem | S ADV) = %f\n" (ObsProbLM.wordprob m.obs_lm word (tag_adv::tag_bos::[]) );
+
+let tag_noun = Vocab.toindex m.tag_vocab "NOUN" in
+	Printf.printf "P(NOUN | ADV) = %f\n" (TagProbLM.wordprob m.tag_lm tag_noun (tag_adv::[]) );
+	Printf.printf "P(NOUN | S ADV) = %f\n" (TagProbLM.wordprob m.tag_lm tag_noun (tag_adv::tag_bos::[]) );
+	
+let tag_adj = Vocab.toindex m.tag_vocab "ADJ" in
+	Printf.printf "P(NOUN | ADJ) = %f\n" (TagProbLM.wordprob m.tag_lm tag_noun (tag_adj::[]) );
+	Printf.printf "P(NOUN | S ADJ) = %f\n" (TagProbLM.wordprob m.tag_lm tag_noun (tag_adj::tag_bos::[]) );
+*)
+(*let suffix_accu = Array.make (Array.length m.apriori_tag_probs) 0.0 in
+let suffix_accu_length = Array.length suffix_accu in
+let (ltagprob, ltagprobs) = Suffix_guesser.guesser_from_trie 
+								m.low_suffixes m.apriori_tag_probs m.theta in
+let max_value = ltagprobs  ("centigramm") suffix_accu in
+Printf.printf "max value: %f" max_value;
+let k = 10 in
+let suf_theta = log 1000. in
+let prune_guessing max =
+	let min = max -. suf_theta in
+	let l = ref [] in
+	let n = ref 0 in
+	(* az eleg nagy sulyu elemek kivalasztasa *)
+	let add_to_list tag w =
+		if w > min then begin
+			incr n;
+			l := (tag, w) :: !l
+		end
+	in
+	Array.iteri (add_to_list) suffix_accu;
+	if !n < k then !l
+	else
+	(* ha tobb, mint k elem lett, akkor vesszuk az elso k-t *)
+	let compare (_, w1) (_, w2) = compare w2 w1 in
+	let sorted = List.sort compare !l in
+	l := [];
+	n := 0;
+	let rec aux sorted acc =
+		match sorted with
+			h::t when !n < k -> incr n; aux t (h :: acc)
+		  | _ -> acc
+	in
+	aux sorted []
+in
+
+
+List.iter (fun (tag, w) -> Printf.printf "%s %f\n" (Vocab.toword m.tag_vocab tag) w) (prune_guessing max_value)
+*)
