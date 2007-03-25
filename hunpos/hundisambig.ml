@@ -48,6 +48,53 @@ let usage  =
 prints them to the stdout with their morphological analyses separated by TAB.\n"
 ;;
 	
+let help  () =
+let msg = 
+"Hundisambig reads tokenized texts from the stdin and add morphological\n" ^
+"analysis (annotation) to each tokens. It's uses the analyses of ocamorph\n" ^
+"and uses hunpos for context sentsitive disambiguation.\n" ^
+"\n" ^
+"The input\n" ^
+"---------\n" ^
+"Put one token in one line. After every sentence boundary put an empty line.\n" ^
+"Punctuation marks (.,;!? etc.) are unique tokens since they helps the\n" ^
+"statistical disambiguator.\n" ^
+"\n" ^
+"You should use huntoken (you can find it in the cvs or use on krusovice):\n\n" ^
+"\t cat YOURTEXT.txt | huntoken  | grep \"<[wcs]>\" | sed \"s/^<[wc]>//\" \\ \n" ^
+"\t | sed \"s/<\\/c>$//\" | sed \"s/^<s>.*//\" > YOURTEXT.tok\"" ^
+"\n\n"^
+"The morphtable\n" ^
+"--------------\n" ^
+"Hundisambig does not call ocamorph directly but uses a static morphological\n" ^
+"lexicon. To create this file from a tokenized text file, call:\n\n" ^
+   "\t cat YOURTEXT.tok | grep -v \"^$\" | cut -f1 | sort | uniq | \\ \n" ^
+   "\t ocamorph --bin YOUR_BIN_FILE --tag_preamble \"\" --tag_sep \"\t\"\\ \n" ^ 
+   "\t          --blocking --compounds --guess Fallback > YOUR_MORPHTABLE\n\n" ^
+"(Notice: there is a TAB char in the argument --tag_sep)\n"^
+"\n" ^
+"Running hundisambig\n" ^
+"-------------------\n" ^
+"Now you can simply call hundisambig: \n\n" ^
+"\t cat YOURTEXT.tok | hundisambig --morphtable YOU_MORPHTABLE --tagger-model HMM_MODEL_FILE \n" ^
+"\n" ^
+" * HMM_MODEL_FILE is a binary resource produced by hunpos. You should ask me for one.\n" ^
+"\n * You can switch off HMM tagging with --use-tagger=no. Please notice without HMM tagging\n" ^
+"   it isn't worth to disambiguate all token, you simply run hundisambig fed with your lexikon.\n" ^
+"\n * If there are more than one analyses (even after POS tagging), hundisambig chooses\n" ^
+"   the one with the shortest or longest lemma. You can decide the used heuristic.\n" ^
+"   We suggest LongestLemma for lexicon construction and ShortesLemma for IR system.\n" ^
+"\n * You can switch of decompounding. In this case the compound words won't be splitted.\n" ^
+"   Notice: this is not the same as calling ocamorph without --compounds option. That means:\n" ^
+"   all compounds are unknown.\n" ^
+
+"\n"
+in
+print_string msg;
+
+exit 0;
+;;
+
 let others s = 
 	 invalid_arg ("Oops, some error. Notice, options require a leading '--'. Watch '"  ^ s ^ "'\n");
 ;;
@@ -83,6 +130,9 @@ Arg.align [
      "--guessing",   Arg.String (set_binary_arg guessing_ref)   , " Enable guessing `yes' | `no' (default = yes)" ;
 	 "--heur-known", Arg.String (set_known_heur), " Heuristic used to choose the best analysis of known words `shortest' | `longest' |  `all'  (default = longest)\n";	 
      "--heur-oov", Arg.String (set_oov_heur), " Heuristic used to choose the best analysis of OOV words `shortest'  |  `all'  (default = shortest)\n";	 
+	 "--help", Arg.Unit (help), " Print help";
+	 "-help", Arg.Unit (help), " Print help";
+
 ]
 
 
@@ -96,8 +146,10 @@ try
 	if !use_tagger_ref && !hmm_model_ref = "" then
 		( invalid_arg "No HMM model, specify --tagger-model argument or use --use-tagger=no\n";) ;
 
-
-	with Invalid_argument (s) ->
+	with Arg.Help x ->
+		Printf.eprintf "hallo %s" x;
+		exit 0
+	| Invalid_argument (s) ->
 		( Printf.eprintf "%s\n" s ; Arg.usage speclist usage; exit 0 ) 
 		
 
