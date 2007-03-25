@@ -31,6 +31,6 @@ let load file =
 	table
 	with  End_of_file -> table
 	
-let analyze table word =
+let tags table word =
 	let res = Hashtbl.find table word in
 		if List.length res = 0 then raise Not_found else res
