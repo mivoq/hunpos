@@ -255,7 +255,7 @@ in
 
 (* fogja a feltoltott suffix_accu -t es abbol kivalaszt nehanyat, amivel tovabb
 	megyunk. Most veszi az elso 20-t, amik azert minnel nagyobbak. *)
-let k = 200 in
+let k = 20 in
 let suf_theta = log 1000. in
 let prune_guessing max =
 	let min = max -. suf_theta in
@@ -296,7 +296,7 @@ let next obs =
 		let (lw, is_upper) = Io.lowercase w in
 	
 		(* is it known words? *)	
-		let (oov, anals) = try (false, Morphtable.analyze morphtable ( w)) 
+		let (oov, anals) = try (false,  morphtable ( w)) 
 						   with Not_found -> (true, []) in
 		obs.oov <- oov ; 
 		obs.anals <- anals;	
