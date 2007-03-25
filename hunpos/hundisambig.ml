@@ -1,5 +1,7 @@
 open Kr_disambiguator
 
+let default_hmm_model = "/usr/share/hundisambig/hu_szeged.model"
+	
 let inlex2str = function
 	Kr_disambiguator.Known -> "K"
 	| Oov -> "O"
@@ -39,7 +41,7 @@ let lowercase_ref = ref true
 let guessing_ref = ref true 
 let heur_known = ref LongestLemma 
 let heur_oov = ref ShortestLemma 
-let hmm_model_ref = ref ""  
+let hmm_model_ref = ref default_hmm_model
 let morphtable_ref = ref ""  
 let use_tagger_ref = ref true 
 
@@ -76,9 +78,10 @@ let msg =
 "Running hundisambig\n" ^
 "-------------------\n" ^
 "Now you can simply call hundisambig: \n\n" ^
-"\t cat YOURTEXT.tok | hundisambig --morphtable YOU_MORPHTABLE --tagger-model HMM_MODEL_FILE \n" ^
+"\t cat YOURTEXT.tok | hundisambig --morphtable YOU_MORPHTABLE [--tagger-model HMM_MODEL_FILE] \n" ^
 "\n" ^
-" * HMM_MODEL_FILE is a binary resource produced by hunpos. You should ask me for one.\n" ^
+" * HMM_MODEL_FILE is a binary resource produced by hunpos. If you use krusovice box, you can\n" ^
+"   use the default at " ^ default_hmm_model ^ " In other case ask me for one.\n" ^
 "\n * You can switch off HMM tagging with --use-tagger=no. Please notice without HMM tagging\n" ^
 "   it isn't worth to disambiguate all token, you simply run hundisambig fed with your lexikon.\n" ^
 "\n * If there are more than one analyses (even after POS tagging), hundisambig chooses\n" ^
@@ -123,7 +126,7 @@ let set_known_heur s =
 let speclist = 
 Arg.align [
 	 "--morphtable",   Arg.Set_string morphtable_ref, " Lexicon processed by ocamorph";
-	 "--tagger-model",   Arg.Set_string hmm_model_ref, " Trained HMM model if using use-tagger=yes";
+	 "--tagger-model",   Arg.Set_string hmm_model_ref, " Trained HMM model if using use-tagger=yes (default = " ^ default_hmm_model ^ ")";
 	 "--use-tagger",  Arg.String (set_binary_arg use_tagger_ref) , " Use HMM tagger to narrow possible analyses `yes' | `no' (default = yes)" ;
      "--lowercase", Arg.String (set_binary_arg lowercase_ref) , " Convert all characters to lower case `yes' | `no' (default = yes)" ;
 	 "--decompounding",   Arg.String (set_binary_arg decompounding_ref)   , " Enable decoumpounding `yes' | `no' (default = yes)" ;
