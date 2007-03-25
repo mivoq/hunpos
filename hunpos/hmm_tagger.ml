@@ -223,7 +223,6 @@ let compile_tagger (m, stat) morphtable tag_order emission_order =
 									
 	let (utagprob, utagprobs) = Suffix_guesser.guesser_from_trie 
 									m.upp_suffixes m.apriori_tag_probs m.theta in
-	prerr_endline "guessers initialized";						
 	let suffix_accu = Array.make (Array.length m.apriori_tag_probs) 0.0 in
 	let suffix_accu_length = Array.length suffix_accu in
 		
