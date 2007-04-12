@@ -121,17 +121,7 @@ let calculate_probs (m,stat) =
 	prerr_endline "apriori tag probs calculated";
 	
 
-	let tag_noun_pl = Vocab.toindex m.tag_vocab "NOUN<PLUR>" in
-	let tag_art = Vocab.toindex m.tag_vocab "ART" in
-	let tag_s = Vocab.toindex m.tag_vocab "<s>" in
-		 
-	
-	let freqs = TagProbLM.freqs m.tag_lm tag_noun_pl (tag_art::tag_s::[]) in
-	let print_freq_pair (wfreq, cfreq) =
-		Printf.printf " %f / %f" wfreq cfreq 
-	in
-	List.iter (print_freq_pair) freqs;
-	
+
 	
 	let tlambdas = TagProbLM.calculate_lambdas m.tag_lm m.tag_order in
 	prerr_endline "tag lambdas calculated";
@@ -149,15 +139,6 @@ let calculate_probs (m,stat) =
 	Array.iteri (fun i v -> Printf.eprintf "%d = %f\n" i v) slambdas;
 	
 	 
-	TagProbLM.counts_to_prob m.tag_lm tlambdas;
-	prerr_endline "tag probs calculated";
-	ObsProbLM.counts_to_prob m.obs_lm olambdas;
-	prerr_endline "observation probs calculated";
-	ObsProbLM.counts_to_prob m.spec_lm slambdas;
-	prerr_endline "spec token probs calculated";
-	
-	Printf.printf "P(NOUN<PLUR> | S ART) = %f\n" (TagProbLM.wordprob m.tag_lm tag_noun_pl (tag_art::tag_s::[]));
-	Printf.printf "P(NOUN<PLUR> |  ART) = %f\n" (TagProbLM.wordprob m.tag_lm tag_noun_pl (tag_art::[]));
 	
 ;;
 
@@ -227,14 +208,37 @@ let compile_tagger (m, stat) morphtable tag_order emission_order =
 	let suffix_accu_length = Array.length suffix_accu in
 		
 let module State = struct
-	type t = int Ngram.t
-	let compare ng1 ng2  = Ngram.compare ng1 ng2 tag_order
-	let print ngram = Ngram.print ngram tag_order 
-		(fun i -> if i = -1 then print_string "<s>"  else print_string (Vocab.toword m.tag_vocab i))
+	type t = int list
+	
+	let compare ng1 ng2 =
+		let rec compare ngram1 ngram2 n =
+			if n <= 0 then 0 else
+			match (ngram1, ngram2) with
+				| ((t1:int)::h1, t2::h2)  -> 
+					if t1 < t2 then -1
+					else if t1 > t2 then 1
+					else compare h1 h2 (pred n)
+				| ([] , []) -> 0	(* ha mindketto ures, akkor egyenloek *)
+				| (t::_ , [] ) -> 1
+				| ([], t::_)  -> -1
+		in
+		compare ng1 ng2 tag_order
+		
+	let equal ng1 ng2 = compare ng1 ng2 = 0
+	let hash ng = 
+		let rec aux ngram n h = 
+			if n < 1 then 1 else
+			match ngram with
+			[] -> h
+			| (gram:int)::t -> aux t (pred n) ((Hashtbl.hash gram) * 31)
+		in
+		aux ng tag_order 0
+			
+	
 end 
 in
 
-let module StateViterbi = Viterbi.Make(Ocamap.Make(State))
+let module StateViterbi = Viterbi.Make(Mfhash.Make(State))
 in
 
 
@@ -335,21 +339,14 @@ let next obs =
 							let next_state = Ngram.add tag from in
 							let tp = TagProbLM.wordprob m.tag_lm tag from in
 								
-									if debug then begin
-									print_string w; print_char ' '; print_string (Vocab.toword m.tag_vocab tag); print_newline();
-									let _ = State.print from ; print_string "->"; State.print next_state in
-									print_float tp ; print_newline ()
-									end;
+								
 									
 							(next_state, (tp )) 
 				) tags
 			in
 			let emission state =
 				let p = wordprob state in
-				if debug then begin
-					print_string "emission: "; State.print state; print_string " ->" ; 
-					print_string w; print_char ' '; print_float p; print_newline () 
-				end;
+			
 				p
 				
 			in
