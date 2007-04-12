@@ -210,7 +210,7 @@ let compile_tagger (m, stat) morphtable tag_order emission_order =
 let module State = struct
 	type t = int list
 	
-	let compare ng1 ng2 =
+	let compar ng1 ng2 =
 		let rec compare ngram1 ngram2 n =
 			if n <= 0 then 0 else
 			match (ngram1, ngram2) with
@@ -224,7 +224,7 @@ let module State = struct
 		in
 		compare ng1 ng2 tag_order
 		
-	let equal ng1 ng2 = compare ng1 ng2 = 0
+	let equal ng1 ng2 = compar ng1 ng2 = 0
 	let hash ng = 
 		let rec aux ngram n h = 
 			if n < 1 then 1 else
@@ -265,7 +265,7 @@ let prune_guessing max =
 	let l = ref [] in
 	let n = ref 0 in
 	(* az eleg nagy sulyu elemek kivalasztasa *)
-	let add_to_list tag w =
+	let add_to_list (tag:int) (w:float) =
 		if w > min then begin
 			incr n;
 			l := (tag, w) :: !l
@@ -275,8 +275,8 @@ let prune_guessing max =
 	if !n < k then !l
 	else
 	(* ha tobb, mint k elem lett, akkor vesszuk az elso k-t *)
-	let compare (_, w1) (_, w2) = compare w2 w1 in
-	let sorted = List.sort compare !l in
+	let compar (_, (w1:float)) (_, (w2:float)) = compare w2 w1 in 
+	let sorted = List.sort compar !l in
 	l := [];
 	n := 0;
 	let rec aux sorted acc =
@@ -471,7 +471,7 @@ let prune_guessing max =
 	if !n < k then !l
 	else
 	(* ha tobb, mint k elem lett, akkor vesszuk az elso k-t *)
-	let compare (_, w1) (_, w2) = compare w2 w1 in
+	let compare (_, w1) (_, w2) = if w1 < w2 then -1 else if w2 > w1 then 1 else 0 in
 	let sorted = List.sort compare !l in
 	l := [];
 	n := 0;
