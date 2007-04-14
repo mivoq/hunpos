@@ -116,9 +116,8 @@ let calculate_theta apriori_tag_probs =
 
 
 
-let guesser_from_trie trie apriori_tag_probs theta  =
+let guesser_from_trie trie theta  =
 	let theta_plus_one = theta +. 1.0 in
-	let mx = Array.length apriori_tag_probs - 1 in
 
 	let trie_iterator word f = 
 
@@ -148,7 +147,7 @@ let guesser_from_trie trie apriori_tag_probs theta  =
 	in
 
 	let tag_prob word tagid =
-		if tagid > mx then raise Not_found else
+	
 		let accu = ref 0.0 in
 		let roll_prob suff_count tag_counts =
 			let tag_prob = try (float (T.find  tagid tag_counts)) /. suff_count with Not_found -> 0.0 in
@@ -156,7 +155,7 @@ let guesser_from_trie trie apriori_tag_probs theta  =
 
 		in
 		trie_iterator word roll_prob;
-		accu :=  log !accu -. log apriori_tag_probs.(tagid);
+		accu :=  log !accu ;
 		!accu
 	in	
 
@@ -180,7 +179,7 @@ let guesser_from_trie trie apriori_tag_probs theta  =
 		let max = ref neg_infinity in
 		for i = 0 to (Array.length accu - 1)  do
 	(*		Printf.printf "P(t|w)=%f P(t)=%f P(w|t)=%f\n" (log accu.(i)) apriori_tag_probs.(i) (log accu.(i)  -. log apriori_tag_probs.(i) );
-	*)		let prob = log accu.(i)    -. log apriori_tag_probs.(i)    in
+	*)		let prob = log accu.(i)   in
 			accu.(i) <- prob;
 			if prob > !max then max := prob
 		done;

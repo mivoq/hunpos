@@ -206,12 +206,13 @@ type observation = {word : string;
 let compile_tagger (m, stat) morphtable tag_order emission_order = 
 	
 	let (ltagprob, ltagprobs) = Suffix_guesser.guesser_from_trie 
-									m.low_suffixes m.apriori_tag_probs m.theta in
+									m.low_suffixes  m.theta in
 									
 	let (utagprob, utagprobs) = Suffix_guesser.guesser_from_trie 
-									m.upp_suffixes m.apriori_tag_probs m.theta in
+									m.upp_suffixes m.theta in
 	let suffix_accu = Array.make (Array.length m.apriori_tag_probs) 0.0 in
 	let suffix_accu_length = Array.length suffix_accu in
+	let max_known_tagid = Vocab.max m.tag_vocab in
 		
 let module State = struct
 	type t = int list
@@ -264,7 +265,7 @@ in
 
 (* fogja a feltoltott suffix_accu -t es abbol kivalaszt nehanyat, amivel tovabb
 	megyunk. Most veszi az elso 20-t, amik azert minnel nagyobbak. *)
-let k = 200 in
+let k = 10 in
 let suf_theta = log 1000. in
 let prune_guessing max =
 	let min = max -. suf_theta in
@@ -373,7 +374,7 @@ let next obs =
 			if (List.length obs.anals) = 1 then
 				let transition = (anals2transtion_fun obs.anals)
 				in 
-				let emission state = 1.0 in
+				let emission state = 0.0 in
 				(transition, emission)
 			else 
 				let (tagprobs, tagprob) = if is_upper then  (utagprobs, utagprob) 
@@ -385,9 +386,9 @@ let next obs =
 					in 
 					let emission state = 
 						let tag = List.hd state in
-						try 
-						tagprob lw tag 
-						with Not_found -> (*Printf.eprintf "new tag for %s" w;*) -99.0
+						if tag > max_known_tagid - 1 then -99.0
+						else
+							(tagprob lw tag  -. (log m.apriori_tag_probs.(tag)))
 						in
 					(transition, emission)
 				else begin
@@ -404,7 +405,7 @@ let next obs =
 				in
 				let emission state =
 					let tagid = List.hd state in
-					suffix_accu.(tagid); 
+					suffix_accu.(tagid)  -. (log m.apriori_tag_probs.(tagid)) ; 
 				in
 				(transition, emission)
 			end
@@ -434,8 +435,10 @@ let _ =
 let (m, stat) = load Sys.argv.(1) in
 prerr_endline "model loadad";
 
+(*							
 (* kicsit szopatjuk magunkat *)
-let word = "Nem" in
+let word = "korontyban" in
+let ltagprob 
 let tag_utt = Vocab.toindex m.tag_vocab "UTT-INT" in
 let tag_bos = -1 in
 Printf.printf "P(Nem) = %f\n" (ObsProbLM.wordprob m.obs_lm word ([]) );
@@ -454,14 +457,12 @@ let tag_adj = Vocab.toindex m.tag_vocab "ADJ" in
 	Printf.printf "P(NOUN | ADJ) = %f\n" (TagProbLM.wordprob m.tag_lm tag_noun (tag_adj::[]) );
 	Printf.printf "P(NOUN | S ADJ) = %f\n" (TagProbLM.wordprob m.tag_lm tag_noun (tag_adj::tag_bos::[]) );
 *)
-(*let suffix_accu = Array.make (Array.length m.apriori_tag_probs) 0.0 in
+let suffix_accu = Array.make (Array.length m.apriori_tag_probs) 0.0 in
 let suffix_accu_length = Array.length suffix_accu in
 let (ltagprob, ltagprobs) = Suffix_guesser.guesser_from_trie 
 								m.low_suffixes m.apriori_tag_probs m.theta in
-let max_value = ltagprobs  ("centigramm") suffix_accu in
-Printf.printf "max value: %f" max_value;
-let k = 10 in
-let suf_theta = log 1000. in
+let k = 1000 in
+let suf_theta = log 10000. in
 let prune_guessing max =
 	let min = max -. suf_theta in
 	let l = ref [] in
@@ -489,6 +490,41 @@ let prune_guessing max =
 	aux sorted []
 in
 
+let doit (words, tags) = 
+	let doit word tag =
+		try
+		let tags = ObsLexicon.find_nofreq m.obs_lex word in
+			()
+		with Not_found ->
+		begin
+			let max_value = ltagprobs  (word) suffix_accu in
+			let l = ref [] in
+			let n = ref 0 in
+				(* az eleg nagy sulyu elemek kivalasztasa *)
+			let add_to_list tag w =
+				l := (Vocab.toword m.tag_vocab tag, w +. (log m.apriori_tag_probs.(tag))) :: !l
+			in
+			Array.iteri (add_to_list) suffix_accu;
+				
+			let compare (_, w1) (_, w2) = compare w2 w1 in
+			let sorted = List.sort compare !l in	
+				
+			let rec hanyadik l n = 
+				match l with
+					(cimke, w) :: t when tag = cimke -> n
+					| _ :: t -> hanyadik t (n+1)
+					| [] -> 1500
+			in
+			
+			Printf.printf "%s\t%s\t%d\n" word tag (hanyadik sorted 1);
+		(*)	List.iter (fun (tag, w) -> Printf.printf "\t%s%f\n" tag w) sorted;
+			Printf.printf "\n";
+		*)	
+		end
+	in
+	List.iter2 doit words tags;
+in 
+Io.iter_tagged_sentence stdin (doit);
 
-List.iter (fun (tag, w) -> Printf.printf "%s %f\n" (Vocab.toword m.tag_vocab tag) w) (prune_guessing max_value)
+
 *)
