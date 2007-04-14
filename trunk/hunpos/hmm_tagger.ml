@@ -139,6 +139,12 @@ let calculate_probs (m,stat) =
 	Array.iteri (fun i v -> Printf.eprintf "%d = %f\n" i v) slambdas;
 	
 	 
+	TagProbLM.counts_to_prob m.tag_lm tlambdas;
+	prerr_endline "tag probs calculated";
+	ObsProbLM.counts_to_prob m.obs_lm olambdas;
+	prerr_endline "observation probs calculated";
+	ObsProbLM.counts_to_prob m.spec_lm slambdas;
+	prerr_endline "spec token probs calculated";
 	
 ;;
 
@@ -210,7 +216,7 @@ let compile_tagger (m, stat) morphtable tag_order emission_order =
 let module State = struct
 	type t = int list
 	
-	let compar ng1 ng2 =
+	let compare ng1 ng2 =
 		let rec compare ngram1 ngram2 n =
 			if n <= 0 then 0 else
 			match (ngram1, ngram2) with
@@ -224,13 +230,13 @@ let module State = struct
 		in
 		compare ng1 ng2 tag_order
 		
-	let equal ng1 ng2 = compar ng1 ng2 = 0
+	let equal ng1 ng2 = compare ng1 ng2 = 0
 	let hash ng = 
 		let rec aux ngram n h = 
-			if n < 1 then 1 else
+			if n <=0  then h else
 			match ngram with
 			[] -> h
-			| (gram:int)::t -> aux t (pred n) ((Hashtbl.hash gram) * 31)
+			| (gram:int)::t -> aux t (pred n) ((Hashtbl.hash gram) + h )
 		in
 		aux ng tag_order 0
 			
@@ -258,7 +264,7 @@ in
 
 (* fogja a feltoltott suffix_accu -t es abbol kivalaszt nehanyat, amivel tovabb
 	megyunk. Most veszi az elso 20-t, amik azert minnel nagyobbak. *)
-let k = 20 in
+let k = 200 in
 let suf_theta = log 1000. in
 let prune_guessing max =
 	let min = max -. suf_theta in
