@@ -265,8 +265,8 @@ in
 
 (* fogja a feltoltott suffix_accu -t es abbol kivalaszt nehanyat, amivel tovabb
 	megyunk. Most veszi az elso 20-t, amik azert minnel nagyobbak. *)
-let k = 10 in
-let suf_theta = log 1000. in
+let k = 500 in
+let suf_theta = log 10. in
 let prune_guessing max =
 	let min = max -. suf_theta in
 	let l = ref [] in
@@ -301,7 +301,7 @@ let next obs =
 			end_of_sentence
 		else 
 		begin
-		let debug = false in
+		let debug = false in (*  w = "Windowst" in *)
 		(* has any uppercased char? *)
 		let (lw, is_upper) = Io.lowercase w in
 	
@@ -375,6 +375,7 @@ let next obs =
 				let transition = (anals2transtion_fun obs.anals)
 				in 
 				let emission state = 0.0 in
+						
 				(transition, emission)
 			else 
 				let (tagprobs, tagprob) = if is_upper then  (utagprobs, utagprob) 
@@ -386,7 +387,7 @@ let next obs =
 					in 
 					let emission state = 
 						let tag = List.hd state in
-						if tag > max_known_tagid - 1 then -99.0
+						if tag > (max_known_tagid - 1) then -99.0
 						else
 							(tagprob lw tag  -. (log m.apriori_tag_probs.(tag)))
 						in
@@ -400,12 +401,21 @@ let next obs =
 					List.map (fun (tagid,w) -> 
 							let next_state = Ngram.add tagid from in
 							let tp = TagProbLM.wordprob m.tag_lm tagid from in
+								if debug then
+								begin
+									Printf.printf "trans %s %f eredeti w=%f\n" (Vocab.toword m.tag_vocab tagid) tp w;
+								end;
 					(next_state, (tp )) 
 				) pruned_guessing			
 				in
 				let emission state =
 					let tagid = List.hd state in
-					suffix_accu.(tagid)  -. (log m.apriori_tag_probs.(tagid)) ; 
+					let prob =  suffix_accu.(tagid)  -. (log m.apriori_tag_probs.(tagid)) in
+							if debug then
+							begin
+								Printf.printf "emission %s %f\n" (Vocab.toword m.tag_vocab tagid) prob;
+							end;
+					prob
 				in
 				(transition, emission)
 			end
@@ -460,9 +470,12 @@ let tag_adj = Vocab.toindex m.tag_vocab "ADJ" in
 let suffix_accu = Array.make (Array.length m.apriori_tag_probs) 0.0 in
 let suffix_accu_length = Array.length suffix_accu in
 let (ltagprob, ltagprobs) = Suffix_guesser.guesser_from_trie 
-								m.low_suffixes m.apriori_tag_probs m.theta in
-let k = 1000 in
-let suf_theta = log 10000. in
+								m.low_suffixes  m.theta in
+let (utagprob, utagprobs) = Suffix_guesser.guesser_from_trie 
+							m.upp_suffixes  m.theta in
+																
+let k = 200 in
+let suf_theta = log 1000. in
 let prune_guessing max =
 	let min = max -. suf_theta in
 	let l = ref [] in
@@ -497,12 +510,13 @@ let doit (words, tags) =
 			()
 		with Not_found ->
 		begin
-			let max_value = ltagprobs  (word) suffix_accu in
+				let (lw, is_upper) = Io.lowercase word in
+			let max_value = utagprobs  (lw) suffix_accu in
 			let l = ref [] in
 			let n = ref 0 in
 				(* az eleg nagy sulyu elemek kivalasztasa *)
 			let add_to_list tag w =
-				l := (Vocab.toword m.tag_vocab tag, w +. (log m.apriori_tag_probs.(tag))) :: !l
+				l := (tag, w ) :: !l
 			in
 			Array.iteri (add_to_list) suffix_accu;
 				
@@ -511,20 +525,20 @@ let doit (words, tags) =
 				
 			let rec hanyadik l n = 
 				match l with
-					(cimke, w) :: t when tag = cimke -> n
+					(cimke, w) :: t when tag = (Vocab.toword m.tag_vocab cimke) -> n
 					| _ :: t -> hanyadik t (n+1)
 					| [] -> 1500
 			in
 			
 			Printf.printf "%s\t%s\t%d\n" word tag (hanyadik sorted 1);
-		(*)	List.iter (fun (tag, w) -> Printf.printf "\t%s%f\n" tag w) sorted;
+			List.iter (fun (tag, w) -> Printf.printf "\t%s \t %f \t %f\n" (Vocab.toword m.tag_vocab tag) w (w -. log m.apriori_tag_probs.(tag))) sorted;
 			Printf.printf "\n";
-		*)	
+			
+		
 		end
 	in
 	List.iter2 doit words tags;
 in 
 Io.iter_tagged_sentence stdin (doit);
-
 
 *)
