@@ -24,7 +24,7 @@ module Make (M : Amap.S)  = struct
 type state = M.key
 type node = {state : state ; mutable from : node option; mutable weight : float }
 
-let logtheta = log 100.0 
+let logtheta = log 1000.0 
 
 
 let decode  hmm start_state observations =
@@ -32,6 +32,8 @@ let decode  hmm start_state observations =
 	let step_forward current_nodes obs =
 		let (transition_prob, emission_prob) = hmm obs in
 		let next_nodes = M.empty () in 	
+	
+			
 		let from_node node =
 			let next_states = transition_prob node.state in
 			List.iter (fun (to_state, w) ->
@@ -42,10 +44,11 @@ let decode  hmm start_state observations =
 						(fun old -> let _ = 
 									if old.weight < w then begin
 											old.weight <- w;
-											old.from <- Some node
+											old.from <- Some node;
 									end in 
 									old
 						)
+			
 				in ()
 				) next_states
 		in
