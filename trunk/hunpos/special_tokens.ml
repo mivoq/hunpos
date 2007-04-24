@@ -25,3 +25,9 @@ let to_lex w =
 	in
 	aux patterns
 
+(*
+let _ = 
+    let _, n = to_lex "&bull;" in
+	print_string (n)
+	
+*)
