@@ -203,7 +203,7 @@ type observation = {word : string;
 					mutable guessed: (string * float ) list;
 					}
 
-let compile_tagger (m, stat) morphtable tag_order emission_order = 
+let compile_tagger (m, stat) morphtable tag_order emission_order max_guessed_tags = 
 	
 	let (ltagprob, ltagprobs) = Suffix_guesser.guesser_from_trie 
 									m.low_suffixes  m.theta in
@@ -265,7 +265,7 @@ in
 
 (* fogja a feltoltott suffix_accu -t es abbol kivalaszt nehanyat, amivel tovabb
 	megyunk. Most veszi az elso 20-t, amik azert minnel nagyobbak. *)
-let k = 500 in
+let k = max_guessed_tags in
 let suf_theta = log 10. in
 let prune_guessing max =
 	let min = max -. suf_theta in

@@ -1,4 +1,5 @@
 type t = {
+mutable max_guessed_tags : int;
 mutable morphtable_file : string;
 mutable model_file : string;
 mutable max_suffix_length : int;
@@ -6,6 +7,8 @@ mutable max_freq_for_guess : int;
 mutable tag_order : int;
 mutable emission_order : int;
 }
+let set_max_guessed_tags conf value = conf.max_guessed_tags <- value ;;
+let get_max_guessed_tags conf  = conf.max_guessed_tags ;;
 let set_morphtable_file conf value = conf.morphtable_file <- value ;;
 let get_morphtable_file conf  = conf.morphtable_file ;;
 let set_model_file conf value = conf.model_file <- value ;;
@@ -77,6 +80,9 @@ let get_emission_order conf  = conf.emission_order ;;
         let map = Hashtbl.create 10 in
         iterate_lines ic (fun lineno key value -> Hashtbl.replace map key value);
         do_replaces map ; 
+  let max_guessed_tags = try int_of_string ( Hashtbl.find map "max_guessed_tags" ) 
+           with Not_found -> failwith ("no max_guessed_tags specified in the config file")
+   in
   let morphtable_file = try  ( Hashtbl.find map "morphtable_file" ) 
            with Not_found -> failwith ("no morphtable_file specified in the config file")
    in
@@ -97,7 +103,8 @@ let get_emission_order conf  = conf.emission_order ;;
    in
 
  {
- morphtable_file = morphtable_file;
+ max_guessed_tags = max_guessed_tags;
+morphtable_file = morphtable_file;
 model_file = model_file;
 max_suffix_length = max_suffix_length;
 max_freq_for_guess = max_freq_for_guess;
@@ -105,6 +112,7 @@ tag_order = tag_order;
 emission_order = emission_order;
 
 } let print_values oc conf  = 
+Printf.fprintf oc "max_guessed_tags=%s\n" (string_of_int conf.max_guessed_tags);
 Printf.fprintf oc "morphtable_file=%s\n" ( conf.morphtable_file);
 Printf.fprintf oc "model_file=%s\n" ( conf.model_file);
 Printf.fprintf oc "max_suffix_length=%s\n" (string_of_int conf.max_suffix_length);
