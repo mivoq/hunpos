@@ -14,8 +14,7 @@ let tagorder = (Config.get_tag_order config) in
 let emorder = (Config.get_emission_order config)in
 let model_file = (Config.get_model_file config)in
 let hunmorph_file = (Config.get_morphtable_file config) in
-
-	
+let max_guessed_tags = (Config.get_max_guessed_tags config) in	
 
 let total_matrix = Array.make_matrix 2 2 0 in
 let false_matrix = Array.make_matrix 2 2 0 in
@@ -60,7 +59,7 @@ let hunmorph = Morphtable.load hunmorph_file in
 prerr_endline "morphtable loaded";
 let model = Hmm_tagger.load model_file in
 prerr_endline "model loadad";
-let tagger = Hmm_tagger.compile_tagger  model (Morphtable.tags hunmorph) tagorder emorder in
+let tagger = Hmm_tagger.compile_tagger  model (Morphtable.tags hunmorph) tagorder emorder max_guessed_tags in
 prerr_endline "tagger compiled";
 let ic =  stdin in
 	
