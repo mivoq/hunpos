@@ -78,36 +78,48 @@ let s =
 "			   | _ -> failwith (\"can't parse line no: \" ^ (string_of_int !lineno)) \n"  ^ 
 "		\n" ^ 
 "		done;\n" ^ 
-"		with End_of_file -> ()\n" in
+"		with End_of_file -> ()\n" ^
+"      let do_replaces tbl =\n" ^
+"      		\n" ^
+"      	let do_entry key value =" ^
+"      		let rxp = Str.regexp \"#{\\\\([^}]+\\\\)}\" in\n" ^
+"      		\n" ^
+"      		let _ = Str.search_forward rxp value 0 in\n" ^
+"      	   	\n" ^
+"      		let k = Str.matched_group 1 value in\n" ^
+"      		try\n" ^
+"      			let erre = Hashtbl.find tbl k in\n" ^
+"      	        let ez = (String.sub value 0 (Str.match_beginning () )) ^ erre ^\n" ^
+"                           (String.sub value (Str.match_end ()) (String.length value - Str.match_end ()) ) in\n" ^
+"      			\n" ^
+"      			Hashtbl.replace tbl key ez;\n" ^
+"      		with Not_found -> failwith (\"not known token: \" ^ k)\n" ^
+"      	in\n" ^
+"      	Hashtbl.iter (fun k v -> try do_entry k v with Not_found -> ()) tbl\n" ^
+"      ;;	\n" ^
+"      	\n" ^
+"      let parse_file filename =\n" ^
+"        let ic = open_in filename in\n" ^
+"        let map = Hashtbl.create 10 in\n" ^
+"        iterate_lines ic (fun lineno key value -> Hashtbl.replace map key value);\n" ^
+"        do_replaces map ; \n" in
 
 Printf.fprintf oc_config "%s" s;
 	
-Printf.fprintf oc_config "let parse_file filename =\n";
-Printf.fprintf oc_config "  let ic = open_in filename in\n";
-	
 List.iter (fun (name, typ, def) -> 
-Printf.fprintf oc_config "  let %s = ref None in \n" name;	
-	)	config_spec;
-	
-Printf.fprintf oc_config "  let process_entry lineno key value = \n     match key with\n";
-
-List.iter (fun (name, typ, def) -> 
-Printf.fprintf oc_config "       | \"%s\" -> %s := Some value" name name;	
-	)	config_spec;
-Printf.fprintf oc_config "       | other -> failwith (\"unknown option entry \" ^ other)\n" ;
-Printf.fprintf oc_config "       in\n        iterate_lines ic process_entry;\n";
-List.iter (fun (name, typ, def) -> 
-	Printf.fprintf oc_config "let %s = match !%s with \n " name name;
-	Printf.fprintf oc_config " None -> failwith (\"no %s specified in the config file\") \n " name; 
-	Printf.fprintf oc_config "| Some v -> ";
 	let s =
 	match typ with
-		"int" -> "int_of_string v"
-		| "string" -> "v"
+		"int" -> "int_of_string"
+		| "string" -> ""
 		| _ -> failwith ("no conversion for type : " ^ typ)
 	in
-	Printf.fprintf oc_config " %s\n in \n" s;
-) config_spec;
+
+Printf.fprintf oc_config "  let %s = try %s ( Hashtbl.find map \"%s\" ) \n" name s name;
+Printf.fprintf oc_config "           with Not_found -> failwith (\"no %s specified in the config file\")\n " name;
+Printf.fprintf oc_config "  in\n";	
+	)	config_spec;
+	
+
 Printf.fprintf oc_config "\n {\n ";
 List.iter (fun (name, typ, def) -> 
 Printf.fprintf oc_config "%s = %s;\n" name name;
@@ -117,10 +129,11 @@ Printf.fprintf oc_config "%s = %s;\n" name name;
 Printf.fprintf oc_config "\n} ";
 
 
-output_string oc_config "let save conf filename = \n";	
-output_string oc_config "  let oc = open_out filename in\n";
+
+	
+output_string oc_config "let print_values oc conf  = \n";	
 	List.iter (fun (name, typ, def) -> 
-	output_string oc_config "Printf.printf \"";
+	output_string oc_config "Printf.fprintf oc \"";
 	output_string oc_config name;
 	output_string oc_config "=%s\\n\" ";
 	let s = 
@@ -134,9 +147,14 @@ output_string oc_config "  let oc = open_out filename in\n";
 	output_string oc_config name;
 	output_string oc_config ");\n";
 	) config_spec;
+	output_string oc_config "()\n";
+	
+	output_string oc_config "let save conf filename entries = \n";
+	output_string oc_config "  let oc = open_out filename in\n";
+	output_string oc_config "  List.iter (fun (k, v) -> Printf.fprintf oc \"%s=%s\n\" k v) entries;\n";
+	output_string oc_config "  print_values oc conf;\n ";
 
-
-Printf.fprintf oc_config "  close_out oc";
+	output_string oc_config "  close_out oc";
 	
 		
     close_out oc_config;
