@@ -14,7 +14,7 @@ let tagorder = (Config.get_tag_order config) in
 let emorder = (Config.get_emission_order config)in
 let model_file = (Config.get_model_file config)in
 let hunmorph_file = (Config.get_morphtable_file config) in
-let test_file = (Config.get_test_file config) in
+
 	
 
 let total_matrix = Array.make_matrix 2 2 0 in
@@ -57,12 +57,12 @@ let falses = ref 0 in
 	
 
 let hunmorph = Morphtable.load hunmorph_file in
-prerr_endline "morphtable loadad";
+prerr_endline "morphtable loaded";
 let model = Hmm_tagger.load model_file in
 prerr_endline "model loadad";
 let tagger = Hmm_tagger.compile_tagger  model (Morphtable.tags hunmorph) tagorder emorder in
 prerr_endline "tagger compiled";
-let ic =  open_in test_file in
+let ic =  stdin in
 	
 prerr_endline "tagging";
 Io.iter_tagged_sentence ic (tag_sentence tagger);

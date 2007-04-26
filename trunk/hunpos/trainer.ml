@@ -12,7 +12,7 @@ else
 let config = Config.parse_file Sys.argv.(1) in
 
 
-let chan = open_in (Config.get_train_file config) in
+let chan =  stdin in
 	(* test.train *) 
 	(* szeged.ful.0.test *)
 let emission_order = (Config.get_emission_order config)  in
