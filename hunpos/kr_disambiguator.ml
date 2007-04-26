@@ -58,7 +58,9 @@ let serialize_analyses annot =
 (* Nahat ez itt a lenyeg. Kivalasztja a megfelelo elemzest *)
 let disambig lowercase decompounding guessing_on oov_filter known_filter hunmorph word tag  =
 	
-	let (anals, guessed) =  hunmorph word in
+	let (anals, guessed) = try  hunmorph word 
+						   with Not_found -> failwith ("can't find a word in the morphtable: " ^ word);
+	in
 	let normalized = if lowercase then (String.lowercase word) else word in
 	if guessed && (not guessing_on) then
 		(* ha guessed, de nem kertek guessinget, akkor a szo maga a lemma *)
