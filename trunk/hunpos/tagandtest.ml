@@ -104,3 +104,13 @@ Printf.printf "seen    (%4d/%5d) %8.2f (%4d/%5d) %8.2f\n" false_matrix.(0).(0) t
 Printf.printf "unseen  (%4d/%5d) %8.2f (%4d/%5d) %8.2f\n" false_matrix.(1).(0) total_matrix.(1).(0) prec.(1).(0) false_matrix.(1).(1) total_matrix.(1).(1) prec.(1).(1);	
 Printf.printf "unseen and disambig %d\n" !unseen_disambig;
 Printf.printf "\noverall precision: %8.2f\n" (float (!total - !falses) /. float !total *. 100.) ;
+
+
+Printf.printf "false seen tokens\t%d\n" (false_matrix.(0).(0) + false_matrix.(0).(1));
+Printf.printf "false unseen tokens\t%d\n" (false_matrix.(1).(0) + false_matrix.(1).(1));
+Printf.printf "false inlex tokens\t%d\n" (false_matrix.(0).(0) + false_matrix.(1).(0));
+Printf.printf "false oov tokens\t%d\n" (false_matrix.(0).(1) + false_matrix.(1).(1));
+Printf.printf "oovtotal\t%d\n" (total_matrix.(0).(1) + total_matrix.(1).(1));
+Printf.printf "falsetotal\t%d\n" !falses;
+Printf.printf "total\t%d\n" !total;
+
