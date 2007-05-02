@@ -118,6 +118,19 @@ let divide_lex_by ic1 ic2 =
 	in
 	merge_two_files divide ic1 ic2 
 	
+let cross_entropy ic1 ic2 =
+	let divide token freq1 freq2 =
+		let ratio = match freq1, freq2 with
+			| Some(freq1), None -> (float_of_int freq1) *. log (0.5)
+			| None, Some(freq2) -> 0.0
+			| Some(freq1), Some freq2 -> (float_of_int freq1) *. log (float_of_int freq2 +. 0.5 )	
+			| None, None -> failwith("Merging resulted in two Nones. Consult the programmer!")
+		in
+		if ratio > 0.0 then
+			print_flex_entry_float token ratio ;
+	in
+	merge_two_files divide ic1 ic2
+	
 let add_lexicons ic1 ic2 =
 	let add token freq1 freq2 =
 		let freq =
@@ -130,6 +143,7 @@ let add_lexicons ic1 ic2 =
 		print_flex_entry_int token freq
 	in
 	merge_two_files add ic1 ic2
+	
 	
 (* main cuccok *****)
 let open_chan_in_argv n =
@@ -165,5 +179,8 @@ let _ =
 			let ic1 = open_chan_in_argv 2 in
 			let ic2 = open_chan_in_argv 3 in
 			divide_lex_by ic1 ic2 ;
-					
+		| "cross_ent" ->
+			let ic1 = open_chan_in_argv 2 in
+			let ic2 = open_chan_in_argv 3 in
+			cross_entropy ic1 ic2;			
 		| _ -> Printf.eprintf "not known command"; exit (-1);
