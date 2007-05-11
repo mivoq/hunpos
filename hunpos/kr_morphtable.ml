@@ -16,8 +16,7 @@ let load file =
 				| word :: [] -> ()
 				| word :: "" :: [] -> ()
                 | word::anals ->
-							Printf.printf " %s read\n" word;
-								flush_all () ;
+						
 						let (guessed, anals) = Kr_parser.parse  anals in
 						let value = if guessed then
 										(* egyelore taggernel nem hasznaljuk
