@@ -181,7 +181,7 @@ let tagger =
 	if !use_tagger_ref then
 		let morphtable_tagger = Kr_morphtable.tags morphtable in
 		let model = Hmm_tagger.load !hmm_model_ref in
-		let tagger = Hmm_tagger.compile_tagger  model morphtable_tagger tagorder emorder in
+		let tagger = Hmm_tagger.compile_tagger  model morphtable_tagger tagorder emorder 10 in
 		Some tagger	
 	else
 		None
