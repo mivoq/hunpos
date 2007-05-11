@@ -10,11 +10,14 @@ let load file =
 	try	
 	while ( true ) do
 		let line = input_line ic in
+		
 		let _ = 
-			match (Parse.split '\t' line)  with
+			match (Parse.split2 '\t' line)  with
 				| word :: [] -> ()
 				| word :: "" :: [] -> ()
                 | word::anals ->
+							Printf.printf " %s read\n" word;
+								flush_all () ;
 						let (guessed, anals) = Kr_parser.parse  anals in
 						let value = if guessed then
 										(* egyelore taggernel nem hasznaljuk
