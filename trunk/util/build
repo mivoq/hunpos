@@ -3,7 +3,8 @@ set -e
 TARGET=ocautil
  
 FLAGS= 
-OCAMLBUILD=ocamlbuild 
+OCAMLBUILD="ocamlbuild -ocamlopt /usr/local/ocaml/9.3/bin/ocamlopt -ocamlc /usr/local/ocaml/9.3/bin/ocamlc"
+ 
 
 ocb() 
 { 
