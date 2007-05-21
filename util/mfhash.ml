@@ -368,3 +368,14 @@ module Int = Make (struct  type t = int
 	let hash = Hashtbl.hash
 	let equal (i1:int) (i2:int) = (i1 = i2) 
 	end)
+	
+	
+let _ =
+	let lex = String.empty () in
+	let incr word = String.update lex word (fun () ->1) (succ)  in
+	try
+	while(true) do
+	  incr (input_line stdin)
+	done
+	with End_of_file ->
+	()
