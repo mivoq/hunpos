@@ -19,7 +19,7 @@ module type S =
     val size : 'a t -> int
   end
 
-module Make (H : Hashtbl.HashedType) : S with type key = H.t =
+module Make (H : Hashtbl.HashedType) (* : S with type key = H.t *) =
   struct
 
 type key = H.t
@@ -51,8 +51,8 @@ let empty () =
 	  a hash_mask 1 *)
 {
    size = 0;
-   hash_mask = 1;
-   data = Array.make 2 Empty
+   hash_mask = (1 lsl 15 ) - 1;
+   data = Array.make (1 lsl 15 ) Empty
 }
 
 (**
@@ -169,16 +169,17 @@ DEFINE CALC_INDEX (k, h) =
 
 
 DEFINE GROW_IT  =
-  h.size <- succ h.size;
+(*  h.size <- succ h.size;
   if h.size > Array.length h.data lsl 1 then resize h
-
+*)
 DEFINE ADD_NEW (where, value) =  
 	  let nv = value in (* hogy ne hivjuk ketszer, ha egy fun*)
 	  where <- Cons { next = Empty; key = k; value = nv};
-	  GROW_IT;
-	  nv
+	  (*GROW_IT;
+	  *)nv
 	
 DEFINE MOVE_FRONT  = 
+
 	prev.next <- cur.next;
 	cur.next  <- Cons first;
 	h.data.(i) <- Cons cur
@@ -203,13 +204,13 @@ DEFINE UPDATE_BUCKET_LIST_FUN (initer, updater)=
         | Cons cur ->
             if H.equal k cur.key then
               let nv = updater in
-			  MOVE_FRONT;
-               nv
+		(*	  MOVE_FRONT;
+          *)     nv
             else update_rec cur
 	   in update_rec
 
 
-let update init updater h k   =
+let update  init updater h k   =
   let i = HASH_FUN(k, h.hash_mask) in
   let l = h.data.(i) in
   match l with
@@ -220,7 +221,7 @@ let update init updater h k   =
       if H.equal k first.key then
         UPDATE (first, updater)
       else update_rec first
-
+(*
 let add_or_replace h k v =
   let i = HASH_FUN(k, h.hash_mask) in
   let l = h.data.(i) in
@@ -259,7 +260,7 @@ let find_or_add h k initer =
        NO_UPDATE (first)
      else 
        update_rec first
-	
+*)	
 (*
 
 let add_or_replace h k v =
@@ -327,6 +328,7 @@ let find_save h k =
       if H.equal k node1.key then node1.value else find_rec node1
 
 *)
+(*
 let create min_size =
   let nsize = ref 2 in
   let nmask = ref 1 in
@@ -338,6 +340,7 @@ let create_from s iter =
   let h = create s in
   iter (fun k v -> let _ = update  (fun () -> v) (fun id -> id) h k in ());
   h
+*)
 end
 
 
@@ -383,4 +386,4 @@ let _ =
 	  incr (input_line stdin)
     done
     with End_of_file ->
-	String.print_bucket_stat lex
+	()
