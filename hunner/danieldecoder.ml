@@ -27,30 +27,30 @@ let next obs =
 		| None, None -> true
 		| None, Tag(_, Start) -> true
 		| None, Tag(_, Lone) -> true
-		| Tag(_, Lone), None -> true
-		| Tag(tag1, Start), Tag(tag2, Mid) -> tag1 = tag2
-		| Tag(tag1, Start), Tag(tag2, End) -> tag1 = tag2
-		| Tag(tag1, Mid), Tag(tag2, Mid) -> tag1 = tag2
-		| Tag(tag1, Mid), Tag(tag2, End)  -> tag1 = tag2
+
 		| Tag(_, End), None -> true
 		| Tag(_, End), Tag(_, Start) -> true
-		| Tag(_, Lone), Tag(_, Start) -> true
 		| Tag(_, End), Tag(_, Lone) -> true
+
+		| Tag(_, Lone), None -> true
+		| Tag(_, Lone), Tag(_, Start) -> true
+		| Tag(_, Lone), Tag(_, Lone) -> true
+
+		| Tag(tag1, Start), Tag(tag2, Mid) -> tag1 = tag2
+		| Tag(tag1, Start), Tag(tag2, End) -> tag1 = tag2
+
+		| Tag(tag1, Mid), Tag(tag2, Mid) -> tag1 = tag2
+		| Tag(tag1, Mid), Tag(tag2, End)  -> tag1 = tag2
+
 		| _, _ -> false
-		(*
-		| (Tag (_, End), Tag (_, (Mid|End))) -> false
-		| (Tag (_, Mid), None) -> false
-		| (Tag (_, Mid), Tag (_, Start)) -> false
-		| (Tag (_, Start), None) -> false
-		| (Tag (_, Start), Tag (_, Start)) -> false
-	*)
 	in
 		
 		
 	let transition from =
         (* List.filter (fun (tag, probs) -> cont from tag) tags *)
     	    let l = List.filter (fun (tag, probs) -> cont from tag) tags in
-		l
+	    (* List.iter (fun (tag, probs) -> Printf.printf "%s -> %s = %f\n" (to_str from) (to_str tag) probs ) l; *)
+	    l
 	in
 	
 	let emission state = 0.0
@@ -138,11 +138,14 @@ let _ =
 		List.iter2 (fun tag (word, tags) -> print_string word; print_char '\t'; print_endline (to_str tag)) tags obs;
 		print_newline ();
 	in
-	Io.iter_sentence stdin (sentence);
-	(*let sent = ref [] in
+	
+(*	let sent = ref [] in
 	try 
 	while(true) do
 		sent := (input_line stdin) :: !sent
 	done 
 	with End_of_file -> sentence (List.rev !sent)
 *)
+
+Io.iter_sentence stdin sentence ;
+
