@@ -209,7 +209,7 @@ let update init updater h k =
 
   let grow_it h =
 	 h.size <- succ h.size;
-	 if h.size > Array.length h.data lsl 1 then resize h 
+	 if  h.do_resizing && h.size > Array.length h.data lsl 1 then resize h 
   in
 
   (* lookup the bucket list *)
@@ -219,7 +219,7 @@ let update init updater h k =
    | Empty ->  (* the bucket is empty just add the new element *)
 	           let nv = init () in
                h.data.(i) <- Cons( {next = Empty; key = k; value =  nv} ) ;
-               if h.do_resizing then grow_it h;
+               grow_it h;
                nv
    | Cons(first) -> 
 	   if  H.equal k first.key then
@@ -232,7 +232,7 @@ let update init updater h k =
          match prev.next with
        | Empty -> let nv = init () in
                   prev.next <- Cons( {next = Empty;  key = k; value =  nv} ) ;
-                  if h.do_resizing then grow_it h;
+                  grow_it h;
                   nv
        | Cons(cur) ->
                   if H.equal k cur.key  then begin
