@@ -5,9 +5,9 @@ module type S =
     type key
     type 'a t
 	val empty : unit -> 'a t
-	val create_from : int -> ((key->'a->unit) -> unit) -> 'a t
-  (*	val create : int -> 'a t
-	val clear : 'a t -> unit
+(*	val create_from : int -> ((key->'a->unit) -> unit) -> 'a t
+  *)	 val create : ?move_to_front:bool -> ?do_resizing:bool -> int -> 'a t
+(*	val clear : 'a t -> unit
 	val copy :  'a t -> 'a  t
 *)	val iter : (key -> 'a -> unit) -> 'a  t -> unit
     val fold : (key -> 'a -> 'b -> 'b) -> 'b -> 'a t  -> 'b
@@ -19,6 +19,7 @@ module type S =
 	val update : (unit -> 'a)   -> ('a -> 'a) -> 'a  t ->  key ->  'a  
 	val update_all: 'a t -> (key -> 'a -> 'a) -> unit
 	val size : 'a t -> int
+	val array_size : 'a t -> int
   end
 
 module Make(H: Hashtbl.HashedType) : (S with type key = H.t) =
@@ -61,18 +62,19 @@ let empty () =
 	 do_resizing = true;
 	}	
 
-let create min_size =
+let create  ?(move_to_front = false) ?(do_resizing = true) min_size =
   let nsize = ref 2 in
   let nmask = ref 1 in
   while (!nsize < min_size) do
 	nsize := !nsize lsl 1;
  	nmask := (!nmask lsl 1) + 1 
   done ;
- {size = 0;
+ {
+  size = 0;
   data = Array.make  !nsize Empty;
   hash_mask = !nmask;
- 	 move_to_front = false;
-	 do_resizing = true; 
+  move_to_front = move_to_front;
+  do_resizing = do_resizing; 
  }
 ;;
 
@@ -85,6 +87,8 @@ let create size =
 *)
 
 let size h = h.size
+	
+let array_size h = Array.length h.data 
 	
 let clear h =
   for i = 0 to Array.length h.data - 1 do
@@ -249,12 +253,12 @@ let update init updater h k =
 
 	
 ;;
-
+(*
 let create_from s iter = 
   let h = create s in
   iter (fun k v-> let _ = update  (fun () -> v) (fun id -> id)  h k in ()) ;
   h
-
+*)
 (* ha benne, akkor modositas nelkul visszaadja, ha nincs Not_found *)
 let find h k =
 	 update (fun () -> raise Not_found) (fun x -> x) h k
@@ -306,12 +310,3 @@ module Int = Make (struct  type t = int
 	end)
 	
 	
-let _ =
-	let lex = String.empty () in
-	let incr  = String.update (fun () ->1) (succ)  lex   in
-	try
-	while(true) do
-	  incr (input_line stdin)
-	done
-	with End_of_file ->
-	()
