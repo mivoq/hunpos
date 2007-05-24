@@ -6,9 +6,9 @@ type t = (int SHash.t * string IHash.t * int ref )
 let create () = (SHash.empty (), IHash.empty (),  ref 0)
 	
 let toindex (word2id, id2word, max) w =
-	let id = SHash.find_or_add word2id w (fun () -> !max) in
+	let id = SHash.find_or_add word2id w  !max in
 	if id = !max then begin
-		let _ = IHash.find_or_add id2word id (fun () -> w) in
+		let _ = IHash.find_or_add id2word id w in
 		incr max ;
 	
 		end; 

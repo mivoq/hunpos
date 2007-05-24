@@ -14,10 +14,9 @@ module type S =
 	val sorted_iter : (key -> key -> int) -> (key -> 'a -> unit) -> 'a t -> unit 
     val print_bucket_stat : 'a t -> unit 
 	val find : 'a t -> key -> 'a 
-	val find_save : 'a t -> key -> 'a
-	val find_or_add : 'a t-> key -> (unit -> 'a) -> 'a
+	val find_or_add : 'a t-> key ->  'a -> 'a
 	val add_or_replace : 'a t -> key -> 'a -> unit
-	val update : 'a  t ->  key -> (unit -> 'a)   -> ('a -> 'a) -> 'a  
+	val update : (unit -> 'a)   -> ('a -> 'a) -> 'a  t ->  key ->  'a  
 	val update_all: 'a t -> (key -> 'a -> 'a) -> unit
 	val size : 'a t -> int
   end
@@ -42,10 +41,12 @@ and ( 'b) bucketlist =
 
 						
 type ( 'b) t =
-  { mutable size: int;                        (* size *)
-    mutable hash_mask: int;				  (* hany bites a hash fgv. *)
-    mutable data: ( 'b) bucketlist array } (* the buckets *)
-
+  { mutable size: int;                     (* size *)
+    mutable hash_mask: int;				   (* hany bites a hash fgv. *)
+    mutable data: ( 'b) bucketlist array;   (* the buckets *)
+    mutable move_to_front : bool;
+	mutable do_resizing   : bool;
+  }
 let hash_fun w hash_mask =
 (*	Printf.printf "hash %d mask %d res %d \n" (H.hash w) hash_mask (	(H.hash w) land hash_mask);
 *)	(H.hash w) land hash_mask
@@ -55,7 +56,27 @@ let hash_fun w hash_mask =
 let empty () =
 	{size = 0;
 	 hash_mask = 1;
-	 data = Array.make 2 Empty}	
+	 data = Array.make 2 Empty;
+	 move_to_front = false;
+	 do_resizing = true;
+	}	
+
+let create min_size =
+  let nsize = ref 2 in
+  let nmask = ref 1 in
+  while (!nsize < min_size) do
+	nsize := !nsize lsl 1;
+ 	nmask := (!nmask lsl 1) + 1 
+  done ;
+ {size = 0;
+  data = Array.make  !nsize Empty;
+  hash_mask = !nmask;
+ 	 move_to_front = false;
+	 do_resizing = true; 
+ }
+;;
+
+
 
 (*
 let create size =
@@ -179,159 +200,74 @@ let print_bucket_stat h =
 	   Hashtbl.iter  (fun k f -> Printf.eprintf "%d\t%d\n" k !f) hist ;
 	end
 
-let find h k   =
-	  let i = hash_fun k (h.hash_mask) in
-	  let l = h.data.(i) in
-	  match l with
-		| Empty ->  raise Not_found 
-		| Cons(node1) -> 
-						let rec find_rec nodex = match nodex.next with
-	                        | Empty -> raise Not_found
-							| Cons(nodexx) ->
-								if H.equal k nodexx.key  then
-									(
-									(* move front the node *)
-									nodex.next <- nodexx.next ;
-									nodexx.next <- Cons(node1) ;
-									h.data.(i) <- Cons( nodexx) ;
-									
-									nodexx.value
-								)
-								else
-									find_rec nodexx ;
-						in
-						if  H.equal k node1.key then
-							node1.value 
-						else 
-							find_rec node1
-	
+let update init updater h k =
 
 
-let find_save h k   =
-	  let i = hash_fun k (h.hash_mask) in
-	  let l = h.data.(i) in
-	  match l with
-		| Empty ->  raise Not_found 
-		| Cons(node1) -> 
-			let rec find_rec nodex = match nodex.next with
-                      | Empty -> raise Not_found
-				| Cons(nodexx) ->
-					if H.equal k nodexx.key  then
-					
-						nodexx.value
-					else
-						find_rec nodexx ;
-			in
-			if  H.equal k node1.key then
-				node1.value 
-			else 
-				find_rec node1
-
-	
-let grow_it h =
+  let grow_it h =
 	 h.size <- succ h.size;
 	 if h.size > Array.length h.data lsl 1 then resize h 
-	
-let update h   k  init updater  =
-	 let i = hash_fun k (h.hash_mask)  in
-	 let l = h.data.(i) in
-	 match l with
-	| Empty ->  let nv = init () in
-				h.data.(i) <- Cons( {next = Empty; key = k; value =  nv} ) ;
-				grow_it h;
-				nv
-	
-	| Cons(node1) -> 
-		let rec update_rec nodex = 
-			match nodex.next with
-            	| Empty -> let nv = init () in
-						   nodex.next <- Cons( {next = Empty;  key = k; value =  nv} ) ;
-					   	   grow_it h;
-						   nv
-			| Cons(nodexx) ->
-				if H.equal k nodexx.key  then
-					begin
-					(* update info *)
-					let nv = updater nodexx.value in
-					nodexx.value <- (nv) ;
-				    (* move front the node *)
-					nodex.next <- nodexx.next ;
-					nodexx.next <- Cons(node1) ;
-					h.data.(i) <- Cons( nodexx) ;
+  in
+
+  (* lookup the bucket list *)
+  let i = hash_fun k (h.hash_mask)  in
+  let l = h.data.(i) in
+  match l with
+   | Empty ->  (* the bucket is empty just add the new element *)
+	           let nv = init () in
+               h.data.(i) <- Cons( {next = Empty; key = k; value =  nv} ) ;
+               if h.do_resizing then grow_it h;
+               nv
+   | Cons(first) -> 
+	   if  H.equal k first.key then
+         (* data is the first element of the bucket list. Just update it. *)
+         let nv = updater first.value in
+         first.value <- (nv) ;
+         nv
+       else 
+       let rec update_bucket_list prev = 
+         match prev.next with
+       | Empty -> let nv = init () in
+                  prev.next <- Cons( {next = Empty;  key = k; value =  nv} ) ;
+                  if h.do_resizing then grow_it h;
+                  nv
+       | Cons(cur) ->
+                  if H.equal k cur.key  then begin
+                    (* update info *)
+                    let nv = updater cur.value in
+                    cur.value <- (nv) ;
+                    (* move front the node *)
+					if h.move_to_front then begin
+                      prev.next <- cur.next ;
+                      cur.next <- Cons(first) ;
+                      h.data.(i) <- Cons( cur) ;
+                    end;
 					nv
-				end
-				else
-					update_rec nodexx ;
-		in
-		if  H.equal k node1.key then
-			begin
-				(* data is at front *)
-				let nv = updater node1.value in
-				node1.value <- (nv) ;
-				nv
-			end
-		else 
-			update_rec node1
-;;
+                  end else
+                    update_bucket_list cur ;
+       in
+       update_bucket_list first
 
-let add_or_replace h k v =
-	let _ = update h k (fun () -> v) (fun x -> v) in ()
 	
-let find_or_add h k init   =
-	 let i = hash_fun k (h.hash_mask)  in
-	 let l = h.data.(i) in
-	 match l with
-		| Empty ->  let nv = init () in
-					h.data.(i) <- Cons( {next = Empty;  key = k; value = nv} ) ;
-					grow_it h ;
-					nv
-	
-	| Cons(node1) -> 
-		let rec update_rec nodex = 
-			match nodex.next with
-                     | Empty -> let nv = init () in
-								nodex.next <- Cons( {next = Empty;  key = k; value = nv} ) ;
-					   			grow_it h ;
-					   			nv
-			| Cons(nodexx) ->
-				if H.equal k nodexx.key  then
-					begin
-					let oldvalue =  nodexx.value in
-				    (* move front the node *)
-					nodex.next <- nodexx.next ;
-					nodexx.next <- Cons(node1) ;
-					h.data.(i) <- Cons( nodexx) ;
-					oldvalue
-				end
-				else
-					update_rec nodexx ;
-		in
-		if  H.equal k node1.key then
-			begin
-			(* data is at front *)
-			node1.value ;
-			end
-		else 
-			update_rec node1
-
-
-
-let create min_size =
-	let nsize = ref 2 in
-	let nmask = ref 1 in
-	while (!nsize < min_size) do
-		nsize := !nsize lsl 1;
-  		nmask := (!nmask lsl 1) + 1 
-	done ;
-	{size = 0;
-	 data = Array.make  !nsize Empty;
-	 hash_mask = !nmask}
 ;;
 
 let create_from s iter = 
-	let h = create s in
-	iter (fun k v-> let _ = update h k (fun () -> v) (fun id -> id) in ()) ;
-	h
+  let h = create s in
+  iter (fun k v-> let _ = update  (fun () -> v) (fun id -> id)  h k in ()) ;
+  h
+
+(* ha benne, akkor modositas nelkul visszaadja, ha nincs Not_found *)
+let find h k =
+	 update (fun () -> raise Not_found) (fun x -> x) h k
+	
+let add_or_replace h k v =
+	let _ = update (fun () -> v) (fun x -> v) h k in ()
+	
+let find_or_add h k v   =
+	update (fun () -> v) (fun x -> x) h k
+
+
+
+
 end
 
 
@@ -372,7 +308,7 @@ module Int = Make (struct  type t = int
 	
 let _ =
 	let lex = String.empty () in
-	let incr word = String.update lex word (fun () ->1) (succ)  in
+	let incr  = String.update (fun () ->1) (succ)  lex   in
 	try
 	while(true) do
 	  incr (input_line stdin)
