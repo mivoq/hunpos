@@ -51,8 +51,8 @@ let empty () =
 	  a hash_mask 1 *)
 {
    size = 0;
-   hash_mask = (1 lsl 15 ) - 1;
-   data = Array.make (1 lsl 15 ) Empty
+   hash_mask = (1 lsl 20 ) - 1;
+   data = Array.make (1 lsl 20 ) Empty
 }
 
 (**
@@ -73,7 +73,8 @@ DEFINE HASH_FUN (w, hash_mask) = H.hash w land hash_mask
 
 
 let resize tbl =
-  let odata = tbl.data in
+ Printf.eprintf "growing\n"; 
+ let odata = tbl.data in
   let osize = Array.length odata in
   let nsize = osize lsl 1 in (* dublázzuk a méretet *)
   let nmask = tbl.hash_mask lsl 1 + 1 in
@@ -169,14 +170,14 @@ DEFINE CALC_INDEX (k, h) =
 
 
 DEFINE GROW_IT  =
-(*  h.size <- succ h.size;
+  h.size <- succ h.size;
   if h.size > Array.length h.data lsl 1 then resize h
-*)
+
 DEFINE ADD_NEW (where, value) =  
 	  let nv = value in (* hogy ne hivjuk ketszer, ha egy fun*)
 	  where <- Cons { next = Empty; key = k; value = nv};
-	  (*GROW_IT;
-	  *)nv
+	  GROW_IT;
+	  nv
 	
 DEFINE MOVE_FRONT  = 
 
@@ -386,4 +387,4 @@ let _ =
 	  incr (input_line stdin)
     done
     with End_of_file ->
-	()
+	String.print_bucket_stat lex
