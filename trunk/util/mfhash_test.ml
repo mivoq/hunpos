@@ -19,6 +19,6 @@ let _ =
 	with End_of_file ->
 	let stop =Sys.time () in
 	
-	Printf.printf "%f %d %d\n" (stop -. start) (H.size lex) (H.array_size lex)
+	Printf.printf "%b %b %d %f %d %d\n" move_to_front do_resizing size (stop -. start) (H.size lex) (H.array_size lex)
 	
 	with _ -> usage_and_exit ()
