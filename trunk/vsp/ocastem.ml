@@ -154,5 +154,6 @@ let stemmer bin_accent bin_noaccent =
 	in
 	(* (hanal, lowercase, decompounding, oov_filter, known_filter) *)
 	let stem = stem (hanal, true, false, false, (filter LongestLemma), (filter LongestLemma)) in
+	let stem = (fun w -> List.hd (stem w)) in
 	stem
 	
