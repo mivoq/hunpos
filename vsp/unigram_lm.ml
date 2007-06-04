@@ -20,6 +20,16 @@ let add_word ft word =
 	ft.n <- ft.n + 1;
 	let _ = Shash.update (fun () -> 1) (succ) ft.freq_table word  in ()
 
+(* hozzaadja lm2-t lm1-hez. Vigyazz! Lm1-t megvaltoztatja *)
+let add_lm_to_lm lm2 lm1 =
+  lm1.n <- lm1.n + lm2.n;
+  let add_word_to_lm1 word freq =
+	let _ =  Shash.update (fun () -> freq) (fun x -> x + freq) lm1.freq_table word  in
+	()
+  in
+  Shash.iter add_word_to_lm1 lm2.freq_table
+	
+	
 (* visszaad egy uj ft-t, amiben az eredeti ft szavai vannak, athajtva f fuggvenyen.
 	stemmelon *)
 let canonize ft f =
