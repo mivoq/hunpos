@@ -26,5 +26,11 @@ else
 	let rels = Shash.to_list rels in
 	let rels = List.fast_sort (fun (key1,val1) (key2,val2) -> compare val2 val1) rels in
     let rels = first_n 2000 rels in
-	let rels = List.map (fun (w, rel) -> (w,(float_of_int (Unigram_lm.freq ft_topic w)) *. rel)) rels in
-	List.iter (fun (key, w) -> Printf.printf "%s\t%f\n" key w) rels
+	let rels_with_freq (w, rel) =
+		let freq = Unigram_lm.freq ft_topic w in
+		let rel = float_of_int freq *. rel in
+		(w, rel, freq)
+	in
+	
+	let rels = List.map rels_with_freq rels in
+	List.iter (fun (key, rel, freq) -> Printf.printf "%s\t%d\t%f\n" key freq rel) rels
