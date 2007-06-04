@@ -1,6 +1,6 @@
 module Shash = Mfhash.String
 let usage () = 
-        Printf.eprintf "usage : %s background topic  \n" Sys.argv.(0)
+        Printf.eprintf "usage : %s background new  \n" Sys.argv.(0)
 ;;
 
 let first_n n l =
@@ -20,6 +20,8 @@ else
    	
 	let ft_lang = Unigram_lm.read_from (open_in Sys.argv.(1)) in
 	let ft_topic = Unigram_lm.read_from (open_in Sys.argv.(2)) in
+	(* hozzaadjuk az uj termest a regihez *)
+	Unigram_lm.add_lm_to_lm ft_topic ft_lang;
 	let rels = Unigram_lm.calc_relevance ft_topic ft_lang in
 	let rels = Shash.to_list rels in
 	let rels = List.fast_sort (fun (key1,val1) (key2,val2) -> compare val2 val1) rels in
