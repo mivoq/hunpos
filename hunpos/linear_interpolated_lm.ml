@@ -54,7 +54,7 @@ let add_word context_node context n word  =
 	let words = get_words_from_node context_node
 	in
 	(* elintezzuk a szot *)
-	let _ = M.WMap.update words word (fun () -> 1.0) (fun x -> x +. 1.0) in
+	let _ = M.WMap.update (fun () -> 1.0) (fun x -> x +. 1.0) words word  in
 	
 	(* es a funkcionalis fabejaras: lehet, h nem kell tovabbmenni.
 	   De ez csak n-tol fugg. Ha a kontext elfogyott, akkor BOS cimkeket pakolunk be *)
@@ -65,9 +65,10 @@ let add_word context_node context n word  =
 			Terminal(freq, _) -> freq, M.CMap.empty()
 			| Parent(freq, childs,_) -> freq, childs
 		in
-		let _ = M.CMap.update childs head 
+		let _ = M.CMap.update  
 				(fun () -> add_word (empty_freq_counter ()) tail (pred n) )
 				(fun child -> add_word child tail (pred n))
+				childs head
 		in
 		Parent(freq +. 1.0, childs, words)
  	| _ -> begin
@@ -141,7 +142,7 @@ let calculate_lambdas context_node level =
 							Terminal(freq, words) -> freq, words
 				   			| Parent(freq, _, words) -> freq, words
 						in
-						let word_freq = try M.WMap.find_save words word  
+						let word_freq = try M.WMap.find words word  
 										with Not_found -> failwith "nem jo a fa";
 						in
 						
@@ -167,10 +168,8 @@ let calculate_lambdas context_node level =
 		M.WMap.iter (do_word) words
 	in
 	iterate_paths adjust_lambda context_node level;
-	 Array.iteri (fun i v -> Printf.eprintf "%d = %f\n" i v) lambdas;
 	lambdas.(0) <- 0.0;
 	let sum = Array.fold_left (fun sum x -> sum +. x) 0.0 lambdas in
-		Printf.eprintf "sum: %f\n" sum;
 	let lambdas = Array.map (fun x ->  x /. sum) lambdas in
 	lambdas
 	
@@ -201,7 +200,7 @@ let counts_to_prob context_trie lambdas =
 				(* minden szora kiszamoljuk a valoszinuseget *)
 				let word_updater word freq =
 					try
-					let prob_to = M.WMap.find_save parent_words word in
+					let prob_to = M.WMap.find parent_words word in
 					prob_to +. l *. (freq /. context_freq)	  
 					with Not_found -> failwith ("rossz fa")
 				in

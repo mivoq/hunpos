@@ -9,7 +9,7 @@ module S = sig
 	(* TODO *)
 end
 *)
-module Make (M : Amap.S ) = struct
+module Make (M : Mfhash.S ) = struct
 	
 type 'a t = (('a * int) list) M.t
 
@@ -44,9 +44,10 @@ let add_to_list l k =
 	(k, succ freq) :: l
 		
 let add_word_tag lex word tag =
-	let _ = M.update lex word 
+	let _ = M.update 
 	(fun () -> (tag, 1) :: [])
 	(fun tags -> add_to_list tags tag)
+	lex word 
 	in ()
 	
 let iter f lex =
