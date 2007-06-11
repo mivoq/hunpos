@@ -111,40 +111,20 @@ let add_sentence (m, stat) (words, tags) =
 let calculate_probs (m,stat) =
 	(* apriori cimke valoszinusegek szamitasa *)
 	let total_freq = TagProbLM.total_context_freq m.tag_lm in
-	Printf.printf "total_freq = %f\n" total_freq;
 	let tag_types  = Vocab.max m.tag_vocab in
-	Printf.printf "tagtypes: %d\n" tag_types;
+
 	m.apriori_tag_probs <- Array.make (tag_types) 0.0;
 	TagProbLM.iter_words (fun tag freq -> 
 		try m.apriori_tag_probs.(tag) <-  ( freq /. total_freq) with _ -> Printf.printf "error %d %s\n" tag (Vocab.toword m.tag_vocab tag)) m.tag_lm;	
-	
-	prerr_endline "apriori tag probs calculated";
-	
 
-
-	
 	let tlambdas = TagProbLM.calculate_lambdas m.tag_lm m.tag_order in
-	prerr_endline "tag lambdas calculated";
-    Array.iteri (fun i v -> Printf.eprintf "%d = %f\n" i v) tlambdas;
- 
 	let olambdas = ObsProbLM.calculate_lambdas m.obs_lm m.emission_order in
-	prerr_endline "observation lambdas calculated";
-	Array.iteri (fun i v -> Printf.eprintf "%d = %f\n" i v) olambdas;
-	
-	
-
 	
 	let slambdas = ObsProbLM.calculate_lambdas m.spec_lm 1 in
-	prerr_endline "spec token lambdas calculated";
-	Array.iteri (fun i v -> Printf.eprintf "%d = %f\n" i v) slambdas;
-	
 	 
 	TagProbLM.counts_to_prob m.tag_lm tlambdas;
-	prerr_endline "tag probs calculated";
 	ObsProbLM.counts_to_prob m.obs_lm olambdas;
-	prerr_endline "observation probs calculated";
 	ObsProbLM.counts_to_prob m.spec_lm slambdas;
-	prerr_endline "spec token probs calculated";
 	
 ;;
 
@@ -173,13 +153,25 @@ let build_suffixtries (m,stat) maxfreq maxlength =
 	in
 	
 	ObsLexicon.iter do_word m.obs_lex;
-	prerr_int stat.rare_low; prerr_string " lowercase, ";
-	prerr_int stat.rare_upp; prerr_endline " uppercase ";
+
 	(* theta szamolasa *)
 	m.theta <- Suffix_guesser.calculate_theta m.apriori_tag_probs;
-	prerr_string "theta = "; prerr_float m.theta; prerr_newline();
+
 ;;
 		
+let print_stat (m,stat) =
+    prerr_endline "Traning corpus:";
+    prerr_int stat.tokens; prerr_endline " tokens";
+    prerr_int stat.sentences; prerr_endline " sentences";
+    prerr_int (Vocab.max m.tag_vocab); prerr_endline " different tag";
+    
+    prerr_endline "\nGuesser trained with";
+    
+    prerr_int stat.rare_low; prerr_endline " lowercase ";
+	prerr_int stat.rare_upp; prerr_endline " uppercase tokens";
+	prerr_string "theta = "; prerr_float m.theta; prerr_newline()
+;;
+	
 let save (m, stat) file_name =
 	let oc = open_out file_name in
 	Marshal.to_channel oc (m, stat, m.apriori_tag_probs) [];
@@ -203,8 +195,9 @@ type observation = {word : string;
 					mutable guessed: (string * float ) list;
 					}
 
-let compile_tagger (m, stat) morphtable tag_order emission_order max_guessed_tags = 
-	
+let compile_tagger (m, stat) morphtable  max_guessed_tags = 
+	let tag_order = m.tag_order in
+	let emission_order = m.emission_order in
 	let (ltagprob, ltagprobs) = Suffix_guesser.guesser_from_trie 
 									m.low_suffixes  m.theta in
 									
