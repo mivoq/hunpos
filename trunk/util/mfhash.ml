@@ -11,6 +11,7 @@ module type S =
 	val copy :  'a t -> 'a  t
 *)	val iter : (key -> 'a -> unit) -> 'a  t -> unit
     val fold : (key -> 'a -> 'b -> 'b) -> 'b -> 'a t  -> 'b
+    val to_list : 'a t -> (key * 'a) list
 	val sorted_iter : (key -> key -> int) -> (key -> 'a -> unit) -> 'a t -> unit 
     val print_bucket_stat : 'a t -> unit 
 	val find : 'a t -> key -> 'a 
@@ -172,18 +173,21 @@ let fold f accu h =
 	iter (fun k v -> accu := f k v !accu) h;
 	!accu
 	
+let to_list h =
+  let add2list l b = 
+   let rec aux node res = match node with
+      Empty -> res
+	| Cons(node) -> aux node.next ( (node.key, node.value) :: res)
+	  in
+	  aux b l
+   in
+   Array.fold_left add2list [] h.data 
+;;
+	
 let sorted_iter compare f h =
-
-   let add2list l b = 
-		let rec aux node res = match node with
-			Empty -> res
-			| Cons(node) -> aux node.next ( (node.key, node.value) :: res)
-		in
-		aux b l
-	in
-	let datalist = Array.fold_left add2list [] h.data in
-	 let sdatalist = List.fast_sort (fun (key1,_) (key2,_) -> compare key1 key2) datalist in
-	 List.iter (fun (key, value) -> f key value) sdatalist   
+   let datalist = to_list h in
+   let sdatalist = List.fast_sort (fun (key1,_) (key2,_) -> compare key1 key2) datalist in
+   List.iter (fun (key, value) -> f key value) sdatalist   
 
 
 let rec bucket2list l = function

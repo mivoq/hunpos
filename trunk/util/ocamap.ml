@@ -8,7 +8,7 @@ module Make(Ord: Map.OrderedType): (Amap.S with type key = Ord.t) = struct
 
 let empty () = {contents = OMap.empty}
 	
-let update m key init update =
+let update init update m key  =
 	let value = try update (OMap.find key m.contents ) with Not_found -> init () in
 	m.contents <- (OMap.add  key value m.contents);
 	value
@@ -17,7 +17,7 @@ let update m key init update =
 let find_or_add m key init =
 	let value = try OMap.find key  m.contents 
 				with Not_found ->
-					let value = init () in
+					let value = init in
 					m.contents <- (OMap.add  key value m.contents);
 					value
 	in
