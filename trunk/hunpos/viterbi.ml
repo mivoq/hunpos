@@ -39,7 +39,7 @@ let decode  hmm start_state observations =
 			List.iter (fun (to_state, w) ->
 				(* check that coming from node.state to to_state is better *)
 				let w = w +. node.weight in
-                let _ = M.update next_nodes to_state 
+                let _ = M.update 
 						(fun () -> {state=to_state; from=Some node;weight = w}) 
 						(fun old -> let _ = 
 									if old.weight < w then begin
@@ -48,6 +48,7 @@ let decode  hmm start_state observations =
 									end in 
 									old
 						)
+						next_nodes to_state 
 			
 				in ()
 				) next_states
