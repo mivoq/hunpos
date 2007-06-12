@@ -43,6 +43,7 @@ release-nx ()
   
   tar cvfz $DIR.tar.gz $DIR
   scp $DIR.tar.gz hp@staro.mokk.bme.hu:/public/Tool/Hunpos/Pre/
+  ssh hp@staro.mokk.bme.hu chmod -w /public/Tool/Hunpos/Pre/$DIR.tar.gz
 
 }
 release()
