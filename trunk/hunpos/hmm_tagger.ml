@@ -173,13 +173,13 @@ let print_stat (m,stat) =
 ;;
 	
 let save (m, stat) file_name =
-	let oc = open_out file_name in
+	let oc = open_out_bin file_name in
 	Marshal.to_channel oc (m, stat, m.apriori_tag_probs) [];
 	close_out oc;
 ;;
 
 let load file_name =
-	let ic = open_in file_name in
+	let ic = open_in_bin file_name in
 	let (m, stat, apriori_tag_probs) = Marshal.from_channel ic in
 	close_in ic;
 	m.apriori_tag_probs <- apriori_tag_probs ;
