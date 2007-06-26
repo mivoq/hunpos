@@ -97,7 +97,7 @@ let main () =
     
     let model = Hmm_tagger.load !model_file in
     
-    prerr_endline "model loadad";
+    prerr_endline "model loaded";
     let tagger = Hmm_tagger.compile_tagger  model hunmorph  !max_guessed_tags in
     prerr_endline "tagger compiled";
 
