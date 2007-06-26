@@ -45,8 +45,8 @@ release-nx ()
       cp /bin/cygwin1.dll $DIR
     fi
   fi
-  cp trainer.native $DIR/hunpos-train$EXT
-  cp tagger.native $DIR/hunpos-tag$EXT
+  cp hunpos/trainer.native $DIR/hunpos-train$EXT
+  cp hunpos/tagger.native $DIR/hunpos-tag$EXT
   copy-release-files $DIR
   
   echo "compressing the release..."
