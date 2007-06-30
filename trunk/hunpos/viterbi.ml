@@ -24,10 +24,8 @@ module Make (M : Amap.S)  = struct
 type state = M.key
 type node = {state : state ; mutable from : node option; mutable weight : float }
 
-let logtheta = log 100000.0 
 
-
-let decode  hmm start_state observations =
+let decode  hmm logtheta start_state observations =
 		
 	let step_forward current_nodes obs =
 		let (transition_prob, emission_prob) = hmm obs in
