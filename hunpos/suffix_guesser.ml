@@ -1,3 +1,10 @@
+
+(* The task of the suffix guesser is to predict a tag-distribution based on the suffix of the word.
+In training phase, it calculates for each suffix its count in the corpus, in total and for each tag separately.
+Let's assume a word ending with ABCDE. During prediction, it linearly interpolates the looked-up predictions
+for the ABCDE, BCDE, CDE, DE, E, "" suffices. Interpolation is done successively with weights 1 and theta,
+so weights are basically powers of 1/(1+theta), with the shorter suffix getting the larger weight. *)
+
 module C = Map.Make (struct type t = char let compare = compare end)
 (*module T = Assoclist.Make(struct type t = string let equal s1 s2 = s1 = s2 end)
 *)
@@ -34,7 +41,7 @@ let add_word trie n word tag count =
 		match node with
 			Empty when ix < stop -> Node(Terminal, if after_branch then Some (update inherited_counts) else None)
 		  | Node(OneChild(c, child),x) when ix < stop ->
-						(* abc utan bc - t is beszurunk; eddigi gyerekhez adunk counts - ot*)
+						(* after abc, we also insert bc. ; TODOMAGYAR eddigi gyerekhez adunk counts - ot *)
 						(* bc utan bc -vel mi van? *)
 						let child = match child with
 						
@@ -61,7 +68,7 @@ let add_word trie n word tag count =
 							let oldchild = 
 							 begin
 								
-									(* abc utan xabc jon *)
+									(* after abc comes xabc *)
 									add_char child inherited_counts false (ix - 1)
 								end
 							in
@@ -69,13 +76,13 @@ let add_word trie n word tag count =
 		 
 		  | Node(OneChild(c', child),_)  ->
 				
-							(* bca utan dca -t v. efca-t szurunk be *)
-							(* eddig gyereknek at kell adnunk a mostani tag_infot *)
+							(* after bca we insert dca or efca *)
+							(* we have to pass the tag_info to the former children *)
 							let oldchild = match child with
 								Node (trie_node, None) -> Node(trie_node, (Some inherited_counts))
 								| _ -> child
 							in
-							(* map a gyerekeknek *)
+							(* map for the children *)
 
 							let childs = C.add c' oldchild C.empty  in
 							let newchild = add_char Empty empty_counts true (ix - 1) in
@@ -104,7 +111,7 @@ let calculate_theta apriori_tag_probs =
 	let pow n = n *. n in
 	(*let p_av = 1.0 /. s in   (*-- use uniform distribution over tag-probs *)
 	*)
-	(* libmmoot alapjan szamolunk, nem Brants 2000 keplet alapjan
+	(* we follow libmmoot's solution here, not Brants 2000's formula.
 	   p_av = E_{P_t}(P_t()) [weighted avg: stddev]
 		
 	*)
@@ -160,7 +167,7 @@ let guesser_from_trie trie theta  =
 	in	
 
 	let tagprobs  word accu =
-		(* accu kinullazasa *)
+		(* zero out the accu *)
 		for i= 0 to (Array.length accu) - 1 do
 			accu.(i) <- 0.0
 		done;
@@ -175,7 +182,11 @@ let guesser_from_trie trie theta  =
 				T.iter (calc_tag_prob) tag_counts;	
 		in
 		trie_iterator word roll_prob;
-		(* to log, bayes inversion and search the maximum *)
+		(* take logarithm and search for the maximum.
+		bayesian inversion is not done here anymore, it is now done in hmm_tagger.
+		This way 1. a maxent model will more easily be pluggable here.
+		         2. the hmm_tagger can throw away unlikely tags before inversion.
+		*)
 		let max = ref neg_infinity in
 		for i = 0 to (Array.length accu - 1)  do
 	(*		Printf.printf "P(t|w)=%f P(t)=%f P(w|t)=%f\n" (log accu.(i)) apriori_tag_probs.(i) (log accu.(i)  -. log apriori_tag_probs.(i) );

@@ -4,22 +4,21 @@
    	
    the calculation of lambdas are the same to Brants 2000.
 
-   The datastructure is similar to the datastructure of SRILM:
+   The data structure is similar to the data structure used by SRILM:
    there is a context tree holding the null context as root (unigrams)
    B for bigrams starting with B , and B->A node for trigrams staring with AB.
    Every node of the context node has a word map storing the frequency of
    the words given the context.
    
-   We don't need that the contexts and the words have the same type,
-   this is important for tagging where tags are integers but words
-   are strings.
+   We don't assume that the contexts and the words have the same data type.
+   This is useful when tags are integers but words are strings.
    
-   This module first can calculate the frequencies, than calculate the
-   lambdas of linear interpolation and finally transform frequencies to
+   This module first calculates the frequencies, then calculates the
+   lambda parameters of linear interpolation and finally transforms frequencies to
    probabilities.
-   
-   TODO: the freq counting and the lambda calculation should be separeted.
-    	
+
+   TODO: the freq counting and the lambda calculation should be separated.
+
 *)
 
 module type S = sig
@@ -75,8 +74,8 @@ let get_words_from_node node =
 
 
 let add_word context_node context n word  =
-    (* context is a list of [B; A] if you add A B C trigram
-       just go down in the tree and add word at every level *)
+    (* context is a list of [B; A] pairs. If you want to add the A B C trigram,
+       just go down in the tree and add word C at every level *)
  
 	let rec add_word context_node context n  =
 	    (* adding word *)
@@ -107,7 +106,7 @@ let add_word context_node context n word  =
 
 	add_word context_node context n 
 	
-(* iterate over the context tree and calls f with the node iif
+(* iterates over the context tree and calls f with the node iif
    gets to a terminal or reaches max level
 *)
 let iterate_paths f context_node max_level =
@@ -153,15 +152,15 @@ let iter_ngrams f trie =
 	in
 	aux trie []
 		
-(** FROM THIS: HANDLING PROBABILITES
+(** FROM HERE: HANDLING PROBABILITES
     *)
     
 let calculate_lambdas context_node level =
 	let lambdas = Array.create (level+2) 0.0 in
 	
 	
-    (* see Brants 2000 (http://citeseer.ist.psu.edu/brants00tnt.html) 
-       this algorithm is detailed on Figure 1.
+    (* See Brants 2000 (http://citeseer.ist.psu.edu/brants00tnt.html).
+       This algorithm is detailed on Figure 1.
     *)
 	let adjust_lambda level context_nodes =
 	    
@@ -180,8 +179,8 @@ let calculate_lambdas context_node level =
 						in
 						
 						let ratio = 
-						    (* note. Brants doesn't discuss the case of trigrams
-						       with frequency of 1. [i think this is a mistake in 
+						    (* note: Brants doesn't discuss the case of trigrams
+						       with frequency 1. [i believe this is a mistake in 
 						       his paper]. We increment lambda_0 in this case
 						       which is maxi = 0 in the first call of search_max
 						    *)
@@ -207,8 +206,8 @@ let calculate_lambdas context_node level =
 	let lambdas = Array.map (fun x ->  x /. sum) lambdas in
 	lambdas
 	
-(* translate frequencies to log probabilities. At the level n we
-    has to know the probability of word at level n-1. For example
+(* translate frequencies to log probabilities. At level n we
+    have to know the probability of word at level n-1. For example
     
 	P(C| A B) = l3 ML (C| A B) + l2 ML (C | B) + l1 ML (C) + l0, which is
 	P(C| A B) = l3 ML (C| A B) + P (C | B) 
@@ -219,16 +218,16 @@ let counts_to_prob context_trie lambdas =
 
 	let rec estimate_at_context node parent_words lambdas =
 		match lambdas with
-			[] -> (* if there is no more lambda we can't calculate
-			    	 the probs of larger ngrams. But this solution
-			    	 could cause error!? *)
+			[] -> (* if there are no more lambdas we can't calculate
+			    	 the probs of larger ngrams. But could this solution
+			    	 cause errors?! *)
 					()
 			| l :: tl -> begin
 				let context_freq, words = match node with
 						Terminal(freq, words) -> freq, words
 					  | Parent(freq, _, words) -> freq, words
 				in
-				(* calc prob of  all words *)
+				(* calc prob of all words *)
 				let word_updater word freq =
 					try
 					let prob_to = M.WMap.find parent_words word in
@@ -245,7 +244,7 @@ let counts_to_prob context_trie lambdas =
 									estimate_at_context child words tl) childs
 			end
 	in
-	(* first is l0 then unigram... *)
+	(* first l0, then unigram... *)
 	match  (Array.to_list lambdas) with
 	[] -> failwith "List.length lambdas < 1"
 	| l0 :: l1::lambdas -> begin
@@ -254,8 +253,8 @@ let counts_to_prob context_trie lambdas =
 			Terminal(freq, words) -> failwith ("empty context_trie")
 		  | Parent(freq, childs, words) -> freq, childs, words
 	in
-	(* the first level is a bit different from the other because of the
-	    lazyness of the programmer
+	(* the first level is a bit different from the others because of the
+	    lazyness of the programmer.
 	*)
 	M.WMap.update_all words (fun word freq -> l0 +. l1 *.(freq /. null_context_freq));
 	M.CMap.iter (fun gram child -> 
@@ -282,7 +281,7 @@ let wordprob trie word context =
 	in
 	log (aux trie context 0.0)
 
-(* TODO is this functio used? *)
+(* TODO is this function used? *)
 let freqs trie word context =
 	let rec aux node context acc =
 		let words = get_words_from_node node in
@@ -305,4 +304,3 @@ let freqs trie word context =
 	aux trie context []
 			
 end
-

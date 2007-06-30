@@ -1,9 +1,9 @@
-(* ez a vacak modul csak arra kell, hogy megmondjuk, egy-egy szo
-   milyen cimkeket kaphat. Olyan, mint a morphtable, csak on fly epitjuk *)
+(* Here we store the possible tags of each word of the training corpus.
+   It is basically an on-the-fly-built morphtable.
  
-(* mivel egy-egy szonak csak nehany cimkeje szokott lenni, ezert egy
-	egyszeru listaban taroljuk a szo lehetseges cimkeit
- *)
+   A single word type cannot have too many possible tags, so we store these in a simple list.
+*)
+
 (*
 module S = sig
 	(* TODO *)
@@ -15,20 +15,12 @@ type 'a t = (('a * int) list) M.t
 
 let empty () = M.empty ()
 	
-(* k elemet hozzaadja l listahoz, ha nincs benne;
-   erdekessege, hogy k elemet a lista elejere mozgatja;
-   Az esetek nagyon nagy szazalekaban igy az elso elem 
-   lesz, amit keresunk.
-
-   ez most itt inkabb ocaml programozasi ujjgyakorlat, masok
-   biztos fat v. mittudomen mit hasznalnanak.
-
-   Fogalmam sincs, hogy mennyit gyorsit, de jol jon a PHD-ben
-   egy ilyen megoldas.
+(* We add element k to list l, if not already in it.
+   A trick: the operation moves this k element to the head of the list if k was already present.
+   The supposed advantage is that the looked-up word will be often the head or near the head.
  *)
 let add_to_list l k =
-	(* ez itt csak gyorsitas: megnezzuk, az elso elem az-e, amit keresunk
-	   ha igen, akkor nem kell modositani semmit.*)
+	(* just an optimization: we look up the first element, and if it is a match, then we don't have to rearrange anything.*)
 	match l with
 		(h, freq)::t when h = k -> (h, succ freq) :: t
 		| _ ->
@@ -36,7 +28,7 @@ let add_to_list l k =
 	let rec aux l = match l with
 		[] -> (k, 0, [])
 	   | (h, freq) :: t when h = k -> (h, freq, t)
-	   | h::t -> (* itt a trukkozes, es lam nem tail recursive *)
+	   | h::t -> (* this is not tail-recursive *)
 	 			 let (k, freq, t) = aux t in
 				 (k, freq, h::t)
 	in
@@ -52,7 +44,7 @@ let add_word_tag lex word tag =
 	
 let iter f lex =
 	let aux word tags =
-		(* itt kiszamoljuk, h a szo hanyszor fordult elo *)
+		(* we calculate the number of occurrences of the word *)
 		let wfreq = List.fold_left (fun  wfreq (tag, tfreq)  -> wfreq + tfreq) 0 tags in
 		f word wfreq tags
 	in
