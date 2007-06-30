@@ -1,9 +1,51 @@
+(* This is a language model to calculate P(C | A, B) with linear
+   interpolation i.e
+   P(C| A B) = l3 ML (C| A B) + l2 ML (C | B) + l1 ML (C) + l0
+   	
+   the calculation of lambdas are the same to Brants 2000.
+
+   The datastructure is similar to the datastructure of SRILM:
+   there is a context tree holding the null context as root (unigrams)
+   B for bigrams starting with B , and B->A node for trigrams staring with AB.
+   Every node of the context node has a word map storing the frequency of
+   the words given the context.
+   
+   We don't need that the contexts and the words have the same type,
+   this is important for tagging where tags are integers but words
+   are strings.
+   
+   This module first can calculate the frequencies, than calculate the
+   lambdas of linear interpolation and finally transform frequencies to
+   probabilities.
+   
+   TODO: the freq counting and the lambda calculation should be separeted.
+    	
+*)
+
 module type S = sig
 	type t
 	type word
 	type context 
 	val empty_freq_counter : unit ->  t
 	val add_word :  t -> (context list) -> int -> word ->  t
+	val total_context_freq : t -> float
+    val iter_words : (word -> float -> unit) -> t -> unit
+    val calculate_lambdas : t -> int -> float array
+    val counts_to_prob : t -> float array -> unit
+    val wordprob : t -> word -> context list -> float
+ 
+ (*
+    val get_words_from_node : t -> float M.WMap.t
+     val add_word : t -> M.CMap.key list -> int -> M.WMap.key -> t
+     val iterate_paths : (int -> t list -> unit) -> t -> int -> unit
+     val total_context_freq : t -> float
+     val word_count_at_context : t -> int
+     val iter_words : (M.WMap.key -> float -> unit) -> t -> unit
+     val iter_ngrams :
+       (M.CMap.key list -> M.WMap.key -> float -> unit) -> t -> unit
+     val freqs : t -> M.WMap.key -> M.CMap.key list -> (float * float) list
+ *)
+ 
 end
 
 module type Maps = sig
@@ -12,13 +54,8 @@ module type Maps = sig
 
 end
 
-(* nem sikerült olyan funktort létrehozni, aminek két modul a paramétere *)
 
-(* A Contextek egymásba ágyazódhatnak, így egy fába tesszük őket. Például
-	P(w3 | t2 t3) számolásához t3 -> t2 út van. Itt van egy map, ami a
-	különböző szavak valószínűségét adja meg 
-*)
-module Make(M : Maps)  = struct
+module Make(M : Maps) : (S with type word = M.WMap.key and type context=M.CMap.key) = struct
 
 	
 type word = M.WMap.key
@@ -31,14 +68,6 @@ type  t = Parent of (float * t  M.CMap.t *  float M.WMap.t) |
 let empty_freq_counter () = Terminal(0.0, M.WMap.empty ())
 
 
-
-
-	
-(* A B C trigram eseten A B a context es C a word. A B egy lista, ahol
-   B az elso, A a masodik elem.
-	
-*)
-
 let get_words_from_node node =
 	match node with
 		Terminal(_, words) -> words
@@ -46,43 +75,41 @@ let get_words_from_node node =
 
 
 let add_word context_node context n word  =
- (* mit kell csinalni? A context_tree-ben lefele menni, elfogyasztani
-	a context listat. Minden szintent betenni word-ot.
-
- *)
+    (* context is a list of [B; A] if you add A B C trigram
+       just go down in the tree and add word at every level *)
+ 
 	let rec add_word context_node context n  =
-	let words = get_words_from_node context_node
-	in
-	(* elintezzuk a szot *)
-	let _ = M.WMap.update (fun () -> 1.0) (fun x -> x +. 1.0) words word  in
+	    (* adding word *)
+	    let words = get_words_from_node context_node in
+	    let _ = M.WMap.update (fun () -> 1.0) (fun x -> x +. 1.0) words word  in
 	
-	(* es a funkcionalis fabejaras: lehet, h nem kell tovabbmenni.
-	   De ez csak n-tol fugg. Ha a kontext elfogyott, akkor BOS cimkeket pakolunk be *)
-	match context with
-		head :: tail when n > 0 -> 
+	    (* functional tree stepping *)
+	    match context with
+		    head :: tail when n > 0 -> 
 	
-		let freq, childs = match context_node with
-			Terminal(freq, _) -> freq, M.CMap.empty()
-			| Parent(freq, childs,_) -> freq, childs
-		in
-		let _ = M.CMap.update  
-				(fun () -> add_word (empty_freq_counter ()) tail (pred n) )
-				(fun child -> add_word child tail (pred n))
-				childs head
-		in
-		Parent(freq +. 1.0, childs, words)
- 	| _ -> begin
-		match context_node with
-				Parent(freq, childs, _) -> Parent(freq +. 1.0, childs, words)
-				| Terminal(freq, _) -> Terminal(freq +. 1.0, words)
-	end		
+		        let freq, childs = match context_node with
+			        Terminal(freq, _) -> freq, M.CMap.empty()
+			        | Parent(freq, childs,_) -> freq, childs
+		        in
+		        let _ = M.CMap.update  
+				    (fun () -> add_word (empty_freq_counter ()) tail (pred n) )
+				    (fun child -> add_word child tail (pred n))
+				    childs head
+		        in
+		        Parent(freq +. 1.0, childs, words)
+ 	        | _ -> 
+ 	            begin
+		            match context_node with
+				        Parent(freq, childs, _) -> Parent(freq +. 1.0, childs, words)
+				        | Terminal(freq, _) -> Terminal(freq +. 1.0, words)
+	            end		
 	in 
 
 	add_word context_node context n 
 	
-(* vegigmegy a context fan es ha level szintet lefele lepett
-	vagy terminalishoz jutott, akkor a gyokertol odaig tarto 
-	utat visszaadja *)
+(* iterate over the context tree and calls f with the node iif
+   gets to a terminal or reaches max level
+*)
 let iterate_paths f context_node max_level =
 	let rec aux node acc level  =
 		if level = max_level then
@@ -126,13 +153,19 @@ let iter_ngrams f trie =
 	in
 	aux trie []
 		
+(** FROM THIS: HANDLING PROBABILITES
+    *)
+    
 let calculate_lambdas context_node level =
 	let lambdas = Array.create (level+2) 0.0 in
 	
 	
-	(* ezt fogjuk a fa level szintu csomopontjain hivni; 
-	   a context_nodes egy lista lesz, amiben legelol van a trigram *)
+    (* see Brants 2000 (http://citeseer.ist.psu.edu/brants00tnt.html) 
+       this algorithm is detailed on Figure 1.
+    *)
 	let adjust_lambda level context_nodes =
+	    
+	    (* this is "for each trigram" *)
 		let do_word word freq = 
 			let rec search_max  nodes i max maxi =
 				
@@ -143,16 +176,15 @@ let calculate_lambdas context_node level =
 				   			| Parent(freq, _, words) -> freq, words
 						in
 						let word_freq = try M.WMap.find words word  
-										with Not_found -> failwith "nem jo a fa";
+										with Not_found -> failwith "error in the tree";
 						in
 						
 						let ratio = 
-							(* hapaxokra Brants algoritmusa nem ter ki, kerdes
-							   ilyenkor milyen lambdat szamoljunk? Mi felveszunk
-							   egy lambda_0 erteket is, amit a search_max elso
-							   hivasokor a maxi kepvisel, hiszen ilyenkor
-							   nem lesz max-nal nagyobb tagja az osszeadasnak
-							*)
+						    (* note. Brants doesn't discuss the case of trigrams
+						       with frequency of 1. [i think this is a mistake in 
+						       his paper]. We increment lambda_0 in this case
+						       which is maxi = 0 in the first call of search_max
+						    *)
 							if context_freq = 1.0 || word_freq = 1.0 then -1.0 
 						    else  (word_freq -. 1.0) /. (context_freq -. 1.0)
 						in
@@ -169,43 +201,43 @@ let calculate_lambdas context_node level =
 	in
 	iterate_paths adjust_lambda context_node level;
 	lambdas.(0) <- 0.0;
+	
+	(* normalize lambdas *)
 	let sum = Array.fold_left (fun sum x -> sum +. x) 0.0 lambdas in
 	let lambdas = Array.map (fun x ->  x /. sum) lambdas in
 	lambdas
 	
-(* fentrol lefele vegigmegyunk a fan, es minden csomopontban megnezzuk
-	a szavakat, es a gyakorisagbol atterunk valoszinusegekre. Egy
-	adott contextusban kell tudnunk az elozo szinten a szo gyakorisagat.
-	
-	A kontextusban kiszamoltuk C szo valoszinuseget, akkor mikor 
-	lemegyunk A B kontextusban, hasznaljuk P (C | A) -t, hiszen
-	P(C| A B) = l3 ML (C| A B) + l2 ML (C | B) + l1 ML (C) + l0, ami
+(* translate frequencies to log probabilities. At the level n we
+    has to know the probability of word at level n-1. For example
+    
+	P(C| A B) = l3 ML (C| A B) + l2 ML (C | B) + l1 ML (C) + l0, which is
 	P(C| A B) = l3 ML (C| A B) + P (C | B) 
 	
-	*)
+	P(C|B) is calculated first
+*)
 let counts_to_prob context_trie lambdas =
-	(* ez megy lefele a faban *)
+
 	let rec estimate_at_context node parent_words lambdas =
 		match lambdas with
-			[] -> (* ha nincs tobb lambda, akkor nincs mit szamolni
-				     TODO: pruning. Ha ez nem terminal node, es van
-				     a WMAP-ben, akkor torolni lehetne
-				   *)
+			[] -> (* if there is no more lambda we can't calculate
+			    	 the probs of larger ngrams. But this solution
+			    	 could cause error!? *)
 					()
 			| l :: tl -> begin
 				let context_freq, words = match node with
 						Terminal(freq, words) -> freq, words
 					  | Parent(freq, _, words) -> freq, words
 				in
-				(* minden szora kiszamoljuk a valoszinuseget *)
+				(* calc prob of  all words *)
 				let word_updater word freq =
 					try
 					let prob_to = M.WMap.find parent_words word in
 					prob_to +. l *. (freq /. context_freq)	  
-					with Not_found -> failwith ("rossz fa")
+					with Not_found -> failwith ("hmm. some error in the tree")
 				in
 				M.WMap.update_all words word_updater;
-				(* fabejaras *)
+				
+				(* walking in the tree *)
 				match node with
 					Terminal(_,_) -> ()
 					| Parent(_, childs, _) ->
@@ -213,8 +245,8 @@ let counts_to_prob context_trie lambdas =
 									estimate_at_context child words tl) childs
 			end
 	in
-	(* legelol van a konstanst tag, aztan unigram... *)
-	match  ((Array.to_list ( lambdas))) with
+	(* first is l0 then unigram... *)
+	match  (Array.to_list lambdas) with
 	[] -> failwith "List.length lambdas < 1"
 	| l0 :: l1::lambdas -> begin
 	
@@ -222,43 +254,40 @@ let counts_to_prob context_trie lambdas =
 			Terminal(freq, words) -> failwith ("empty context_trie")
 		  | Parent(freq, childs, words) -> freq, childs, words
 	in
-	(* elso szinten kicsit mashogy szamolunk 
-	   azert, mert lustasagbol ugy irtuk meg a fenti estimate_at_context
-	   fuggvenyt, hogy kapja meg az elozo words map-et
+	(* the first level is a bit different from the other because of the
+	    lazyness of the programmer
 	*)
 	M.WMap.update_all words (fun word freq -> l0 +. l1 *.(freq /. null_context_freq));
 	M.CMap.iter (fun gram child -> 
 						estimate_at_context child words lambdas) childs
 	end
 	
-(* egyszeruen le kell menni a legmelyebb kontextusba, ahol megvan *)
+(* go down to the max level where the word can be found *)
 let wordprob trie word context =
 	let rec aux node context prob_to =
 		let words = get_words_from_node node in
 		try
 			let prob_here = M.WMap.find words word in
 		
-			(* lehet-e tovabbmenni? *)
+			(* can we continue? *)
 			match (node, context) with 
 				(Parent(_, childs, _), h::t) ->
-				begin
-			 		try
-			
-						let child_node = M.CMap.find childs h in
+				    begin try
+			            let child_node = M.CMap.find childs h in
 						aux child_node t prob_here;
 					with Not_found ->  prob_here
-				end
-			  | (_,_) -> (* nem lehet *)   prob_here
+				    end
+			  | (_,_) -> (* no *)   prob_here
 		with Not_found ->   prob_to
 	in
 	log (aux trie context 0.0)
 
+(* TODO is this functio used? *)
 let freqs trie word context =
 	let rec aux node context acc =
 		let words = get_words_from_node node in
 			try
 			let freq_here = M.WMap.find words word in
-				(* lehet-e tovabbmenni? *)
 			match node with
 				Parent(cfreq, childs, _) ->
 					begin
@@ -271,7 +300,7 @@ let freqs trie word context =
 							| _ -> acc
 					end
 			  | Terminal(cfreq,_) -> (freq_here, cfreq)::acc
-			with Not_found -> failwith ("nincs szo")
+			with Not_found -> failwith ("no word")
 	in
 	aux trie context []
 			
