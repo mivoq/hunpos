@@ -12,6 +12,16 @@ clean ()
   
     
 } 
+
+# generates a version.ml file which is compiled into
+# the source
+make-version-ml()
+{
+
+    echo "let version = \""$(VERSION)"\"" > version.ml
+	echo "let date = \""`date`"\"" >> version.ml
+
+}
 ocb() 
 { 
   $OCAMLBUILD $FLAGS $TARGETS 
