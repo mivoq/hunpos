@@ -11,7 +11,7 @@ let rec compare ngram1 ngram2 n =
 	match (ngram1, ngram2) with
 		| (t1::h1, t2::h2)  -> 
 			let c = gram_compare t1 t2 in if c != 0 then c else compare h1 h2 (pred n)
-		| ([] , []) -> 0	(* ha mindketto ures, akkor egyenloek *)
+		| ([] , []) -> 0	(* empties are equals *)
 		| (t::_ , [] ) -> 1
 		| ([], t::_)  -> -1
 	
@@ -35,4 +35,4 @@ let hash ngram n =
 	
 let newest = function
 	newest :: _ -> newest
-   | _ -> failwith ("empty ngram") 
+   | _ -> failwith ("empty ngram")
