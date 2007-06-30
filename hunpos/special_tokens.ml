@@ -1,4 +1,4 @@
-
+(* TODO. THIS IS HARD WIRED!!!! PUT IT IN A SIMPLE CONFIG FILE *)
 
 let patterns = [("@CARD"        , "^[0-9]*$"        ); 
 	           ("@CARDPUNCT"  , "^[0-9]+\\.$"      );
