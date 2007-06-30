@@ -1,5 +1,5 @@
 
-(* mikozben iteralsz, ne nyulj hozza! *)
+
 module type S =
   sig
     type key

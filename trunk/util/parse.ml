@@ -1,10 +1,4 @@
-let split c str = 
-  let rec aux s acc = 
-    try  let ind=String.index s c in
-         aux (String.sub s (ind+1) ((String.length s) - ind -1 )) 
-              ((String.sub s 0 ind)::acc)       
-    with Not_found -> List.rev (s::acc) 
-  in aux str []
+
 
 
 
@@ -16,3 +10,5 @@ let split2 c str =
 	in
 	aux [] 0
 	
+
+let split = split2
