@@ -1,7 +1,0 @@
-name = "maxent"
-version = "0.1.0"
-description = "OCaml wrapper for the Maxent package"
-requires = ""
-archive(byte) = "maxent.cma"
-archive(native) = "maxent.cmxa"
-linkopts = ""
