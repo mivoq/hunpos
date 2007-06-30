@@ -37,7 +37,7 @@ let read_sentence chan =
 							 next_item line last
 					with _ -> Printf.eprintf "invalid line %d %s\n" last line; failwith "invalid line"
 				in
-				(word, gold) :: read_sentence false (* már tudjuk, hogy nem üres a mondat *)
+				(word, gold) :: read_sentence false (* we already know that the sentence is nonempty *)
 		in
 					read_sentence true
 ;;
@@ -62,7 +62,7 @@ let read_sentence_no_split chan =
 					read_sentence true
 ;;
 
-(* vegigmegy a chan minden mondatan is atadja az f-nek*)
+(* goes through the sentences of chan, calling f for each sentence *)
 let iter_sentence_no_split chan f =
 	let rec loop () = 
 		f (read_sentence_no_split chan);
@@ -140,7 +140,7 @@ let iter_fielded_sentence chan f =
 	
 (*
 
-(* vegigmegy a chan minden mondatan is atadja az f-nek*)
+(* goes through the sentences of chan, calling f for each sentence *)
 let iter_sentence chan f =
 	let rec loop () = 
 		f (read_sentence chan);
@@ -167,7 +167,7 @@ external unsafe_set : string -> int -> char -> unit = "%string_unsafe_set"
    translated to lowercase, including accented letters of the ISO
    Latin-1 (8859-1) character set.
 
-   And return true iif the original string had any uppercase charater.
+   Return true iif the original string had any uppercase charater.
  *)
 let lowercase s =
 	let changed = ref false in
