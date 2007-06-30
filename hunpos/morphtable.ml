@@ -1,14 +1,12 @@
+(** This module loads the morphtable (words with possible tags) from
+    a file to a Set. The format is:
+    1. one word per line
+    2. word TAB tag1 TAB tag2
+    
+ *)
 module SSet = Set.Make(String)
 
 
-(* Split a string into a list of substrings based on a delimiter character *)
-let split c str = 
-  let rec aux s acc = 
-    try  let ind=String.index s c in
-         aux (String.sub s (ind+1) ((String.length s) - ind -1 )) 
-              ((String.sub s 0 ind)::acc)       
-    with Not_found -> List.rev (s::acc) 
-  in aux str [];;
 
 let load file = 
 	let ic = open_in file in (* "data/hunmorph.cache" *)
@@ -17,14 +15,12 @@ let load file =
 	while ( true ) do
 		let line = input_line ic in
 		let _ = 
-			match (split '\t' line)  with
+			match (Parse.split2 '\t' line)  with
 				| word :: [] -> ()
 				| word :: "" :: [] -> ()
                 | word::anals ->
-								 
-	 							  let tags = List.fold_left (fun s a -> SSet.add a s) SSet.empty anals in
-								   Hashtbl.replace table word (SSet.elements tags) 
-			
+                    let tags = List.fold_left (fun s a -> SSet.add a s) SSet.empty anals in
+                    Hashtbl.replace table word (SSet.elements tags) 
 				| _ -> failwith ("line error: " ^ line)
 		in () 
 	done ;

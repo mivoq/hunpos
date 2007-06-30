@@ -1,38 +1,50 @@
-(*
-module type S = 
-sig
+(** This is the good old viterbi algorith of hmm decoding 
+    in functional style.
 
-	type state
-	type observation
-	type hmm
-	val decode :  hmm ->  state ->  observation list ->  state list
+    Viterbi doesn't deal with the structure and order of HMM. 
+    It needs only a start state and a function that calculates
+    following states with transition and emission probabilities.
+    
+    We do not have any trellis: at every step we record only the
+    set of possible states with their weight and preceeding state.
+    This structure is called node. The nodes which are accesible
+    at step t. are stored in a map (hashtable or tree). The keys
+    are states the values are nodes. The type of states are'nt 
+    restricted.
+    
+    The HMM from the viewpoint of viterbi is two functions. The
+    first calculates the following states with transition probs
+    from a current state. The second function calculates the
+    emission probs.
+        
+*)				
 
-end
 
-
-module Make(M: Amap.S) : (S with type state =  M.key) = struct
-*)
-
-(*module M = Mfhash.Make(struct type t = string Ngram2.t 
-					   let compare n1 n2 = Ngram2.compare n1 n2 2
-					   let hash ngram = Ngram2.hash ngram 2 
-					   let equal n1 n2 = Ngram2.equal n1 n2 2
-					   end)
-*)					
 module Make (M : Amap.S)  = struct
 	
 type state = M.key
 type node = {state : state ; mutable from : node option; mutable weight : float }
 
-
+(** Returns the most probable state sequence from the start_state given
+    the observations sequence.
+  *)
 let decode  hmm logtheta start_state observations =
 		
+	(** returns the next states given the observation obs and the
+	    previous states.
+	 *)
 	let step_forward current_nodes obs =
+	    (* hmm is only two functions *)
 		let (transition_prob, emission_prob) = hmm obs in
+		
+		(* the following states are stored in a map; this
+		    is similar to the coloumn of trellis *)
 		let next_nodes = M.empty () in 	
 	
-			
+		(* we iterate over all previous state and refresh the map *)	
 		let from_node node =
+		    (* the hmm knows the set of following 
+		        state from prev state *)
 			let next_states = transition_prob node.state in
 			List.iter (fun (to_state, w) ->
 				(* check that coming from node.state to to_state is better *)
@@ -52,20 +64,26 @@ let decode  hmm logtheta start_state observations =
 				) next_states
 		in
 		List.iter from_node current_nodes;
-		(* now 1. add emission probs,  2.  search the max weight, 3. map it to a list, *)
-		(* but: if there is only one state, we don't need to do anything *)
+		(* now 1. add emission probs,  
+		       2. search the max weight, 
+		       3. convert it to a list, 
+		   but: if there is only one state,
+		   we don't need to do anything 
+		*)
 		
 		let next_nodes = M.fold (fun state node l ->
 									node::l
 			 					) [] next_nodes in
 		if (List.length next_nodes) = 1 then next_nodes else
 			let max = ref neg_infinity in
-			(* beam pruning *)
+			    
+			(* add emission prob and search the max *)
 			List.iter (fun node ->
 						node.weight <- node.weight +. (emission_prob node.state);
 						if node.weight > !max then max:=node.weight ;
 						) next_nodes ;
 				
+			(* beam pruning *)
 			let rec filter l acc = match l with
 	             h::t -> let acc = if h.weight < (!max -. logtheta) then acc else h::acc in
 						filter t acc
@@ -75,7 +93,7 @@ let decode  hmm logtheta start_state observations =
 				
 			next_nodes
 	in
-	let  start_node = {state = start_state; from = None; weight = 0.0} in
+	let start_node = {state = start_state; from = None; weight = 0.0} in
 	let end_nodes = List.fold_left step_forward (start_node::[]) observations in
 	
 	(* search the best end_node *) 
