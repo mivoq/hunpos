@@ -17,12 +17,14 @@ printf "Reads the untagged corpus from the stdin and writes the\n";
 printf "tagged version to the stdout.\n\n";
 printf "-m,  --morphtable=FILE        Morphological lexicon. (default: do not use)\n";
 printf "\n";
-printf "Unknown words:\n";
+printf "Performance tuning:\n";
 printf "-g,  --max-guessed-tags=NUM   only the most probable NUM tags used (default = -g10)\n";
+printf "-b,  --beam-theta=NUM              use NUM as theta in viterbi beam search (default = -t1000)\n";
 printf "\n";
 printf "Output options:\n";
 printf "-t,  --tokens-types           print the types of each token (default = no)\n";
 printf "\n";
+  
 
 
 printf "-h,  --help                   Print this help.\n";
@@ -56,6 +58,8 @@ let morphtable = ref ""
 let model_file = ref ""  
 let max_guessed_tags = ref 10
 let marktokens = ref false 
+let theta = ref 1000
+  
 let string_arg var =  Some (fun x -> var := x ) 
 ;;
 
@@ -65,6 +69,13 @@ let int_arg varname var = Some (fun x ->
         var := i 
     with _ -> raise (Error ("not valid value for " ^ varname ))
 )
+      
+  let float_arg varname var = Some (fun x -> 
+  try 
+    let i = float_of_string x in 
+    var := i 
+  with _ -> raise (Error ("not valid value for " ^ varname ))
+)
 
 
 let specs = 
@@ -72,7 +83,7 @@ let specs =
   ( 'm', "morphtable", None, string_arg morphtable);
   ( 'g', "max-guessed-tags", None, int_arg "max-guessed-tags" max_guessed_tags);
   ( 't', "token-types", set marktokens true, None);
-  
+  ( 'b', "beam-theta", None, int_arg "beam-theta" theta);
   ( 'h', "help", Some help, None)
 
 ]
@@ -98,7 +109,7 @@ let main () =
     let model = Hmm_tagger.load !model_file in
     
     prerr_endline "model loaded";
-    let tagger = Hmm_tagger.compile_tagger  model hunmorph  !max_guessed_tags in
+    let tagger = Hmm_tagger.compile_tagger  model hunmorph  !max_guessed_tags (log (float_of_int !theta)) in
     prerr_endline "tagger compiled";
 
     let ic =  stdin in

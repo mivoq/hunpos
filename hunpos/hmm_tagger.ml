@@ -21,7 +21,7 @@ module ObsLexicon = Lexicon.Make(Mfhash.String)
 let eos_tag = "</s>"
 let bos_tag = "<s>"
 	
-type model = {
+type model = { 
   			  tag_order : int ;
 			  emission_order : int;
 			  mutable tag_lm : TagProbLM.t;
@@ -195,7 +195,7 @@ type observation = {word : string;
 					mutable guessed: (string * float ) list;
 					}
 
-let compile_tagger (m, stat) morphtable  max_guessed_tags = 
+let compile_tagger (m, stat) morphtable  max_guessed_tags logtheta = 
 	let tag_order = m.tag_order in
 	let emission_order = m.emission_order in
 	let (ltagprob, ltagprobs) = Suffix_guesser.guesser_from_trie 
@@ -424,7 +424,7 @@ let tag_sentence words  =
 	let first::observations = 	List.map (word2observation) (List.rev ( "<s>"::words))  in
 	first.is_first <- true;
 	let observations = first :: observations in
-	let state_seq = StateViterbi.decode  next start_state observations in
+	let state_seq = StateViterbi.decode  next logtheta start_state observations in
 	let state_seq = List.map (fun state -> let tag_id = Ngram.newest state in Vocab.toword m.tag_vocab tag_id) state_seq in
 		
 	( List.tl (List.rev  observations), List.tl (List.rev  (state_seq)))
