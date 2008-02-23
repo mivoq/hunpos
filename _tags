@@ -1,0 +1,5 @@
+<hunpos> or <hunpos/lib> or <util> or <clib> : include
+
+<**/*caml.o>: output_obj
+
+<**/*.c>: use_cc
