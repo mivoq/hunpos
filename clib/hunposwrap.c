@@ -1,22 +1,20 @@
 #include <string>
 #include <vector>
+extern "C" {
 #include <caml/mlvalues.h>
 #include <caml/callback.h>
 #include <caml/alloc.h>
 #include <caml/memory.h>
 #include <caml/fail.h>
+}  
+#include "hunpos.h"
 
 using namespace std;
 
-class HunPos
-{
-private:
-  long* tagger_fun; 
   
-public:
   
   // one should add some other constructor with default values
-  HunPos(string model_file, string morph_table_file, int max_guessed_tags, int theta)
+HunPos::HunPos(const string model_file, const string morph_table_file, int max_guessed_tags, int theta)
   {
     // notice: ocaml is a function language
     // we call a function init that returns a new function which can do the tagging
@@ -35,15 +33,13 @@ public:
      
      // due to the garbage collector we have to register the
      // returned value not to be deallocated
-     caml_register_global_root(tagger_fun);
+     caml_register_global_root( ((value*) tagger_fun));
      
-     *tagger_fun = caml_callbackN( *init_fun, 4, args );
+     tagger_fun = (long*) caml_callbackN( *init_fun, 4, args );
      
      
     
   }
-  
-  vector<string> tag(vector<string> tokens)
-  {
-  }
-};
+
+
+ 
