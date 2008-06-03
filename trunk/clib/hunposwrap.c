@@ -58,8 +58,8 @@ hunpos init_hunpos(char* model_file, char* morph_table_file, int max_guessed_tag
      
      // due to the garbage collector we have to register the
      // returned value not to be deallocated
-     caml_register_global_root(  tagger_fun);
-     *tagger_fun = (long*) caml_callbackN( *init_fun, 4, args );
+     caml_register_global_root(& tagger_fun);
+     tagger_fun =  caml_callbackN( *init_fun, 4, args );
 
      // CAMLreturn1(tagger_fun)
      CAMLreturn( tagger_fun);
@@ -85,7 +85,7 @@ void tag(hunpos hp, int n, char** tokens, char** tags)
   		 list = v;
   }
  
-  return_value = caml_callback(*hp, list);
+  return_value = caml_callback(hp, list);
   string_list_to_C_string_array(return_value, tags);
   CAMLreturn0;
   
