@@ -15,7 +15,7 @@ clean ()
 
 # generates a version.ml file which is compiled into
 # the source
-make-version-ml()
+makeVersionMl()
 {
 
     echo "let version = \""$(VERSION)"\"" > version.ml
