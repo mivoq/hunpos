@@ -32,7 +32,7 @@ usage()
     echo "usage: ./build [ build | clean | release linux | release win | release macosx ]"
 }
 
-copy-release-files ()
+copyReleaseFiles ()
 {
   echo "NO README FILE"
 }
