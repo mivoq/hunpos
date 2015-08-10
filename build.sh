@@ -38,7 +38,7 @@ copyReleaseFiles ()
 }
 
 
-release-nx ()
+releaseNx ()
 { 
 
   cd _build
