@@ -16,10 +16,9 @@ all: test
 
 hunpos.o: ${SOURCES}
 	${OCAMLOPT_BIN} ${OCAMLOPT_ARGS} ${OCAMLOPT_LIBS}  ${SOURCES} -o hunpos.o
-	
+
 test: hunpos.o hunposwrap.c test.c
 	cc -o test -I. -I${OCAMLC_WHERE} -L${OCAMLC_WHERE} ${SOURCE_WRAPPER_C}  hunpos.o  test.c  -lunix -lasmrun -lcurses -lm -lstr
-	
+
 clean:
 	rm *.o *.cmi *.cmx
-	
