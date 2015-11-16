@@ -31,12 +31,17 @@ void string_list_to_C_string_array(value context, char** r) {
 
 hunpos init_hunpos(char* model_file, char* morph_table_file, int max_guessed_tags, int theta)
 {
-    
     CAMLparam0();
+    if(model_file == NULL) {
+	return NULL;
+    }
+    if(morph_table_file == NULL) {
+	morph_table_file = "";
+    }
 
     char* dummyargv[2];
-    dummyargv[0]="cmorph";
-    dummyargv[1]=0;
+    dummyargv[0]="";
+    dummyargv[1]=NULL;
     caml_startup(dummyargv);
     
     // notice: ocaml is a function language
@@ -58,11 +63,12 @@ hunpos init_hunpos(char* model_file, char* morph_table_file, int max_guessed_tag
      
      // due to the garbage collector we have to register the
      // returned value not to be deallocated
-     caml_register_global_root(& tagger_fun);
-     tagger_fun =  caml_callbackN( *init_fun, 4, args );
+     caml_register_global_root(tagger_fun);
+     value* t = tagger_fun;
+     *t =  caml_callbackN( *init_fun, 4, args );
 
      // CAMLreturn1(tagger_fun)
-     CAMLreturn( tagger_fun);
+     CAMLreturnT(hunpos,tagger_fun);
     
   }
  
@@ -85,7 +91,8 @@ void tag(hunpos hp, int n, char** tokens, char** tags)
   		 list = v;
   }
  
-  return_value = caml_callback(hp, list);
+  value* t = hp;
+  return_value = caml_callback(*t, list);
   string_list_to_C_string_array(return_value, tags);
   CAMLreturn0;
   
