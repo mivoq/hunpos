@@ -1,7 +1,7 @@
 #ifndef _HUNPOS_H_
 #define _HUNPOS_H_
-#include <caml/mlvalues.h>
-typedef  value hunpos ;
+
+typedef  void* hunpos ;
 
 hunpos init_hunpos(char* modelfile, char* morphtable, int x, int y);
 
