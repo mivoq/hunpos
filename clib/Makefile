@@ -25,7 +25,7 @@ test: hunpos.o hunposwrap.c test.c
 
 
 TO_CLEAN:=$(filter %.ml,$(SOURCES))
-TO_CLEAN:=$(TO_CLEAN:.ml=.cmx) $(TO_CLEAN:.ml=.cmi) $(TO_CLEAN:.ml=.cmo) $(TO_CLEAN:.ml=.o)
+TO_CLEAN:=$(TO_CLEAN:.ml=.cmx) $(TO_CLEAN:.ml=.cmi) $(TO_CLEAN:.ml=.cmo) $(TO_CLEAN:.ml=.o) a.a a.cma a.cmxa
 
 clean:
 	$(RM) $(TO_CLEAN)
