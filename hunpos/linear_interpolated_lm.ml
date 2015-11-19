@@ -156,7 +156,7 @@ let iter_ngrams f trie =
     *)
     
 let calculate_lambdas context_node level =
-	let lambdas = Array.create (level+2) 0.0 in
+	let lambdas = Array.make (level+2) 0.0 in
 	
 	
     (* See Brants 2000 (http://citeseer.ist.psu.edu/brants00tnt.html).
