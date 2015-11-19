@@ -108,7 +108,7 @@ let resize tbl =
   let nsize = osize lsl 1 in
   let nmask = (tbl.hash_mask lsl 1) + 1 in
   if nsize <> osize then 
-    let ndata = Array.create nsize Empty in
+    let ndata = Array.make nsize Empty in
     let rec insert_bucket = function
         Empty -> ()
       | Cons(onode) ->
