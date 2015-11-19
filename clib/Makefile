@@ -42,13 +42,13 @@ all: test
 	$(CC) -c $(<) -fPIC -o $(@)
 
 libhunpos.a: $(SOURCES) $(OBJECTS) hunpos.o
-	ar rvs $(@) hunpos.o $(OBJECTS)
+	ar rvs $(@) $(OBJECTS) hunpos.o
 
 hunpos.o: $(SOURCES)
 	$(OCAMLOPT) -I ../util -I ../hunpos -output-obj $(LIBS_OCAML) $(SOURCES_OCAML) -o hunpos.o
 
-test: test.c $(SOURCES) $(OBJECTS) hunpos.o
-	cc -Wl,--no-undefined -o $(@) -I. hunpos.o $(OBJECTS) $(<)  -lm -ldl -L$(OCAMLC_WHERE) -lunix -lasmrun -lcamlstr
+test: test.c $(SOURCES) $(OBJECTS) hunpos.o libhunpos.a
+	cc $(<) -o $(@) -I. libhunpos.a -L$(OCAMLC_WHERE) -lcamlstr -lunix -lasmrun_pic libhunpos.a -L$(OCAMLC_WHERE) -lcamlstr -lunix -lasmrun_pic -lm -ldl
 
 clean:
 	$(RM) $(TO_CLEAN) hunpos.o test
