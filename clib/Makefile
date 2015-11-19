@@ -1,31 +1,56 @@
-OCAMLOPT_BIN=ocamlopt 
+OCAMLOPT=ocamlopt 
+OCAMLMKLIB=ocamlmklib
 
-OCAMLOPT_LIBS=str.cmxa
-OCAMLOPT_ARGS= -I ../util -I ../hunpos -output-obj
+SOURCES :=                                  \
+	../util/amap.ml			    \
+	../util/parse.ml		    \
+	../util/mfhash.ml		    \
+	../util/vocab.mli		    \
+	../util/vocab.ml		    \
+					    \
+	../hunpos/io.ml			    \
+	../hunpos/lexicon.ml		    \
+	../hunpos/linear_interpolated_lm.ml \
+	../hunpos/morphtable.ml		    \
+	../hunpos/ngram.ml		    \
+	../hunpos/special_tokens.ml	    \
+	../hunpos/suffix_guesser.ml	    \
+	../hunpos/viterbi.ml		    \
+	../hunpos/hmm_tagger.ml		    \
+					    \
+	hunposcaml.ml			    \
+					    \
+	hunposwrap.c			    \
+					    \
+	hunpos.h
 
-SOURCES_UTIL = amap.ml parse.ml mfhash.ml vocab.mli vocab.ml
-SOURCES_HUNPOS= io.ml lexicon.ml  linear_interpolated_lm.ml   morphtable.ml  ngram.ml  special_tokens.ml  suffix_guesser.ml  viterbi.ml hmm_tagger.ml 
+SOURCES_C=$(filter %.c,$(SOURCES))
+SOURCES_ML=$(filter %.ml,$(SOURCES))
+SOURCES_OCAML=$(filter-out %.c %.h,$(SOURCES))
 
-SOURCE_WRAPPER_ML=hunposcaml.ml
-SOURCE_WRAPPER_C=hunposwrap.c
+LIBS_OCAML=str.cmxa
 
-SOURCES=$(addprefix ../util/,${SOURCES_UTIL}) $(addprefix ../hunpos/,${SOURCES_HUNPOS}) ${SOURCE_WRAPPER_ML} 
-OCAMLC_WHERE=`ocamlc -where`
+OBJECTS=$(SOURCES_C:.c=.o)
+TO_CLEAN:=$(SOURCES_ML:.ml=.cmx) $(SOURCES_ML:.ml=.cmi) $(SOURCES_ML:.ml=.cmo) $(SOURCES_ML:.ml=.o) hunpos.cma hunpos.cmxa hunpos.a dllhunpos.so libhunpos.a
+TO_CLEAN+=$(OBJECTS) test
+
+OCAMLC_WHERE:=$(shell ocamlc -where)
 
 all: test
 
-libhunpos.so: ${SOURCES}
-	ocamlmklib ${OCAMLOPT_ARGS} ${SOURCES}  -oc hunpos
+%.o: %.c
+	$(CC) -c $(<) -fPIC -o $(@)
 
-hunpos.o: ${SOURCES}
-	${OCAMLOPT_BIN} ${OCAMLOPT_ARGS} ${OCAMLOPT_LIBS}  ${SOURCES} -o hunpos.o
+libhunpos.a: $(SOURCES) $(OBJECTS) hunpos.o
+	ar rvs $(@) hunpos.o $(OBJECTS)
 
-test: hunpos.o hunposwrap.c test.c
-	cc -o test -I. -I${OCAMLC_WHERE} -L${OCAMLC_WHERE} ${SOURCE_WRAPPER_C}  hunpos.o  test.c  -lunix -lasmrun -lm -ldl -lcamlstr
+hunpos.o: $(SOURCES)
+	$(OCAMLOPT) -I ../util -I ../hunpos -output-obj $(LIBS_OCAML) $(SOURCES_OCAML) -o hunpos.o
 
-
-TO_CLEAN:=$(filter %.ml,$(SOURCES))
-TO_CLEAN:=$(TO_CLEAN:.ml=.cmx) $(TO_CLEAN:.ml=.cmi) $(TO_CLEAN:.ml=.cmo) $(TO_CLEAN:.ml=.o) a.a a.cma a.cmxa
+test: test.c $(SOURCES) $(OBJECTS) hunpos.o
+	cc -Wl,--no-undefined -o $(@) -I. hunpos.o $(OBJECTS) $(<)  -lm -ldl -L$(OCAMLC_WHERE) -lunix -lasmrun -lcamlstr
 
 clean:
-	$(RM) $(TO_CLEAN)
+	$(RM) $(TO_CLEAN) hunpos.o test
+
+.DELETE_ON_ERROR:
