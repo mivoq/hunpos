@@ -32,13 +32,14 @@ int read_sentence(char ** tokens)
       return i;
 	  }
   }
+  return i-1;
 }
 
-const char* get_token(void*tokens,int i) {
+static const char* get_token(void*tokens,int i) {
 	return ((char**)tokens)[i];
 }
-int add_tag(void*tags,int i,const char*tag) {
-	((const char**)tags)[i]=tag;
+static int add_tag(void*tokens,int i,const char*tag) {
+	printf ("%s\t%s\n", get_token(tokens,i), tag);
 	return 0;
 }
 int main(int argc, char ** argv)
@@ -51,22 +52,17 @@ int main(int argc, char ** argv)
   int error = 0;
   Hunpos hp = hunpos_tagger_new(argv[1], argv[2], 3, 1000, &error);
   char* tokens[MAX_SENT_LENGTH];
-  char* tags[MAX_SENT_LENGTH];
-  
   int i, n;
   for (i=0; i<MAX_SENT_LENGTH;i++) 
   {
     tokens[i] =  (char *) malloc(MAX_TOKEN_LENGTH * sizeof(char));
-    tags[i] = (char *) malloc(MAX_TAG_LENGTH * sizeof(char));
   }
   while((n = read_sentence(tokens)) > 0)
   {
     error = 0;
-    hunpos_tagger_tag(hp, n, tokens, get_token, tags, add_tag, &error);
-    for(i = 0; i < n; i++)
-    {
-      printf ("%s\t%s\n", tokens[i], tags[i]);
-    }
+    //int j;
+    //for(j = 0; j < 10000000; j++)
+    hunpos_tagger_tag(hp, n, tokens, get_token, tokens, add_tag, &error);
     printf ("\n");
   }
 }
