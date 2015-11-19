@@ -85,14 +85,12 @@ void hunpos_tagger_tag(Hunpos hp, int n, void* tokens, const char* (*get_token)(
   {
   	 	 /* Allocate a cons cell */
   		 v = caml_alloc_small(2, 0); 
-//  		 Field(v, 0) = caml_copy_string(mytokens[i]);
   		 Field(v, 0) = caml_copy_string(get_token(tokens,i));
   		 Field(v, 1) = list; /* add to the list as head */								
   		 list = v;
   }
- 
-  value* t = hp;
-  return_value = caml_callback(*t, list);
+
+  return_value = caml_callback(*((value*)hp), list);
   string_list_to_C_string_array(return_value, tags, add_tag);
   CAMLreturn0;
   
