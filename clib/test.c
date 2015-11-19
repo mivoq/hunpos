@@ -33,6 +33,14 @@ int read_sentence(char ** tokens)
 	  }
   }
 }
+
+const char* get_token(void*tokens,int i) {
+	return ((char**)tokens)[i];
+}
+int add_tag(void*tags,int i,const char*tag) {
+	((const char**)tags)[i]=tag;
+	return 0;
+}
 int main(int argc, char ** argv)
 {
   if(argc < 2)
@@ -40,8 +48,8 @@ int main(int argc, char ** argv)
     cerr("usage: test model_file morph_table\n");
     return 1;
   }
-  
-  hunpos hp = init_hunpos(argv[1], argv[2], 3, 1000);
+  int error = 0;
+  Hunpos hp = hunpos_tagger_new(argv[1], argv[2], 3, 1000, &error);
   char* tokens[MAX_SENT_LENGTH];
   char* tags[MAX_SENT_LENGTH];
   
@@ -53,7 +61,8 @@ int main(int argc, char ** argv)
   }
   while((n = read_sentence(tokens)) > 0)
   {
-    tag(hp, n, tokens, tags);
+    error = 0;
+    hunpos_tagger_tag(hp, n, tokens, get_token, tags, add_tag, &error);
     for(i = 0; i < n; i++)
     {
       printf ("%s\t%s\n", tokens[i], tags[i]);
