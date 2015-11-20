@@ -6,26 +6,6 @@
 #include <caml/fail.h>
 #include "stdio.h"
 #include "hunpos.h"
- // lehet, hogy kell strncpy
- 
-/* converts an ocaml string list to C++ string vector. In Ocaml a binary predicate context
-   is given by a string list
-*/
-void string_list_to_C_string_array(value context, void* tags, int (*add_tag)(void*,int,const char*)) {
-	CAMLparam1(context);
-	CAMLlocal1(tail);
-
-	/* context is a string list */
-	tail = context;
-	int i = 0;
-	while(tail != Val_emptylist) {
-		char* s = String_val(Field(tail, Tag_cons));
-		add_tag(tags, i++, s);
-		tail = Field(tail, 1);
-	}
-	CAMLreturn0;	
-}
-
  
   // one should add some other constructor with default values
 
@@ -44,7 +24,7 @@ Hunpos hunpos_tagger_new(const char* model_file, const char* morph_table_file, i
     dummyargv[1]=NULL;
     caml_startup(dummyargv);
     
-    // notice: ocaml is a function language
+    // notice: ocaml is a functional language
     // we call a function init that returns a new function which can do the tagging
      static value* init_fun;
      if (init_fun == NULL) 
@@ -91,7 +71,14 @@ void hunpos_tagger_tag(Hunpos hp, int n, void* tokens, const char* (*get_token)(
   }
 
   return_value = caml_callback(*((value*)hp), list);
-  string_list_to_C_string_array(return_value, tags, add_tag);
+
+  i = 0;
+  while(return_value != Val_emptylist) {
+	  char* s = String_val(Field(return_value, Tag_cons));
+	  add_tag(tags, i++, s);
+	  return_value = Field(return_value, 1);
+  }
+
   CAMLreturn0;
   
 }
