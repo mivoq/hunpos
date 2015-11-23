@@ -6,7 +6,7 @@
 #include <caml/fail.h>
 #include "stdio.h"
 #include "hunpos.h"
- 
+
   // one should add some other constructor with default values
 
 Hunpos hunpos_tagger_new(const char* model_file, const char* morph_table_file, int max_guessed_tags, int theta, int* error)
@@ -18,21 +18,21 @@ Hunpos hunpos_tagger_new(const char* model_file, const char* morph_table_file, i
     if(morph_table_file == NULL) {
 	morph_table_file = "";
     }
-    
+
     /* Startup OCaml */
     CAMLparam0();
     char* dummyargv[2];
     dummyargv[0]="";
     dummyargv[1]=NULL;
     caml_startup(dummyargv);
-    
+
     /* get hunpos init function from ocaml */
      static value* init_fun;
-     if (init_fun == NULL) 
+     if (init_fun == NULL)
      {
            init_fun = caml_named_value("init_from_files");
      }
-    
+
      Hunpos tagger_fun = (Hunpos) malloc(sizeof(value));
 
      // we pass some argument to the function
@@ -41,7 +41,7 @@ Hunpos hunpos_tagger_new(const char* model_file, const char* morph_table_file, i
      args[1] = caml_copy_string(morph_table_file);
      args[2] = Val_int(max_guessed_tags);
      args[3] = Val_int(theta);
-     
+
      /* due to the garbage collector we have to register the */
      /* returned value not to be deallocated                 */
      caml_register_global_root(tagger_fun);
@@ -55,9 +55,9 @@ Hunpos hunpos_tagger_new(const char* model_file, const char* morph_table_file, i
 
      // CAMLreturn1(tagger_fun)
      CAMLreturnT(Hunpos,tagger_fun);
-    
+
   }
- 
+
 void hunpos_tagger_tag(Hunpos hp, int n, void* tokens, const char* (*get_token)(void*,int), void* tags, int (*add_tag)(void*,int,const char*), int* error)
 {
 	CAMLparam0();
@@ -67,9 +67,9 @@ void hunpos_tagger_tag(Hunpos hp, int n, void* tokens, const char* (*get_token)(
 	for(i = 0; i< n; i ++)
 	{
 		/* Allocate a cons cell */
-		v = caml_alloc_small(2, 0); 
-		Field(v, 0) = caml_copy_string(get_token(tokens,i));
-		Field(v, 1) = list; /* add to the list as head */								
+		v = caml_alloc_small(2, 0);
+		Store_field (v, 0, caml_copy_string(get_token(tokens,i)) );
+		Store_field (v, 1, list );
 		list = v;
 	}
 
@@ -84,7 +84,7 @@ void hunpos_tagger_tag(Hunpos hp, int n, void* tokens, const char* (*get_token)(
 	}
 
 	CAMLreturn0;
-  
+
 }
 
 /* hunpos destruction */
@@ -96,4 +96,4 @@ void hunpos_tagger_destroy(Hunpos hp, int* error)
 	CAMLreturn0;
 }
 
- 
+
