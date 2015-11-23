@@ -58,10 +58,7 @@ void hunpos_tagger_tag(Hunpos hp, int n, void* tokens, const char* (*get_token)(
   CAMLlocal3 (return_value,list, v);
   int i;
   list = Val_emptylist;  /* the [] */
-  // we construct an ocaml string list
-  // notice the first token is at the head
-  // we spare on List.rev
-  for(i = n-1; i > -1; i --)
+  for(i = 0; i< n; i ++)
   {
   	 	 /* Allocate a cons cell */
   		 v = caml_alloc_small(2, 0); 
@@ -71,6 +68,7 @@ void hunpos_tagger_tag(Hunpos hp, int n, void* tokens, const char* (*get_token)(
   }
 
   return_value = caml_callback(*((value*)hp), list);
+  return_value = Field(return_value,1);
 
   i = 0;
   while(return_value != Val_emptylist) {
