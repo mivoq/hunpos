@@ -1,5 +1,4 @@
 OCAMLOPT=ocamlopt 
-OCAMLMKLIB=ocamlmklib
 
 SOURCES :=                                  \
 	../util/amap.ml			    \
@@ -34,7 +33,7 @@ OBJECTS=$(SOURCES_C:.c=.o)
 TO_CLEAN:=$(SOURCES_ML:.ml=.cmx) $(SOURCES_ML:.ml=.cmi) $(SOURCES_ML:.ml=.cmo) $(SOURCES_ML:.ml=.o) hunpos.cma hunpos.cmxa hunpos.a dllhunpos.so libhunpos.a
 TO_CLEAN+=$(OBJECTS) test
 
-OCAMLC_WHERE:=$(shell ocamlc -where)
+OCAMLC_WHERE:=$(shell $(OCAMLOPT) -where)
 
 all: test
 
