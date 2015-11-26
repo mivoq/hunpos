@@ -7,7 +7,7 @@
 #include "stdio.h"
 #include "hunpos.h"
 
-  // one should add some other constructor with default values
+static int is_initialized = 0;
 
 Hunpos hunpos_tagger_new(const char* model_file, const char* morph_table_file, int max_guessed_tags, int theta, int* error)
 {
@@ -20,11 +20,15 @@ Hunpos hunpos_tagger_new(const char* model_file, const char* morph_table_file, i
     }
 
     /* Startup OCaml */
+    if (is_initialized == 0)
+    {
+	is_initialized = 1;
+	char* dummyargv[2];
+	dummyargv[0]="";
+	dummyargv[1]=NULL;
+	caml_startup(dummyargv);
+    }
     CAMLparam0();
-    char* dummyargv[2];
-    dummyargv[0]="";
-    dummyargv[1]=NULL;
-    caml_startup(dummyargv);
 
     /* get hunpos init function from ocaml */
      static value* init_fun;
