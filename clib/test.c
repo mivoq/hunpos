@@ -38,10 +38,8 @@ int read_sentence(char ** tokens)
 static const char* get_token(void*tokens,int i, int* error) {
 	return ((char**)tokens)[i];
 }
-static int add_tag(void*tokens,int i,const char* tag) {
-	int error;
-	printf ("%s\t%s\n", get_token(tokens,i, &error), tag);
-	return error;
+static void add_tag(void*tokens,int i,const char* tag, int* error) {
+	printf ("%s\t%s\n", get_token(tokens,i, error), tag);
 }
 int main(int argc, char ** argv)
 {
