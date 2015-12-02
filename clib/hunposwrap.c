@@ -63,7 +63,7 @@ Hunpos hunpos_tagger_new(const char* model_file, const char* morph_table_file, i
 
   }
 
-void hunpos_tagger_tag(Hunpos hp, int n, void* tokens, const char* (*get_token)(void*,int, int*), void* tags, int (*add_tag)(void*,int,const char*), int* error)
+void hunpos_tagger_tag(Hunpos hp, int n, void* tokens, const char* (*get_token)(void*,int, int*), void* tags, void (*add_tag)(void*,int,const char*, int*), int* error)
 {
 	CAMLparam0();
 	CAMLlocal3 (return_value, list, v);
@@ -87,7 +87,7 @@ void hunpos_tagger_tag(Hunpos hp, int n, void* tokens, const char* (*get_token)(
 	i = 0;
 	while(return_value != Val_emptylist) {
 		char* s = String_val(Field(return_value, Tag_cons));
-		*error = add_tag(tags, i++, s);
+		add_tag(tags, i++, s, error);
 		if (*error != 0) CAMLreturn0;
 		return_value = Field(return_value, 1);
 	}
