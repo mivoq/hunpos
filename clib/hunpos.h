@@ -21,10 +21,10 @@ Hunpos hunpos_tagger_new(const char* modelfile, const char* morphtable, int max_
  * @param tokens the tokens to be tagged
  * @param get_token function that given @p tokens and an index, returns the token content.
  * @param tags output tags
- * @param add_tag function that diven @p tags, an index and the tag content, sets the tag content.
+ * @param add_tag function that given @p tags, an index and the tag content, sets the tag content.
  * @param error pointer to an integer to report errors or NULL
  */
-void hunpos_tagger_tag(Hunpos hp, int n, void* tokens, const char* (*get_token)(void*,int, int*), void* tags, int (*add_tag)(void*,int,const char*), int* error);
+void hunpos_tagger_tag(Hunpos hp, int n, void* tokens, const char* (*get_token)(void*,int, int*), void* tags, void (*add_tag)(void*,int,const char*, int*), int* error);
 
 /**
  * @param hp
