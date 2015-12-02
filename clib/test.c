@@ -12,18 +12,18 @@ void cerr(char* txt)
 
 // reads a sentence from the stdin, stores the values in tokens (caller allocates)
 // and returns the number of tokens
-int read_sentence(char ** tokens) 
+int read_sentence(char ** tokens)
 {
   int i, j;
   char * token;
   for(i = 0; i < MAX_SENT_LENGTH; i++)
-  { 
+  {
     if(!fgets(tokens[i], MAX_TOKEN_LENGTH, stdin)) {
       return i;
     }
     // don't like to type a lot
     token = tokens[i];
-    
+
     // chomp(token)
     for (j = 0; token[j] != '\012'; ++j) {};
     token[j] = 0;
@@ -35,12 +35,13 @@ int read_sentence(char ** tokens)
   return i-1;
 }
 
-static const char* get_token(void*tokens,int i) {
+static const char* get_token(void*tokens,int i, int* error) {
 	return ((char**)tokens)[i];
 }
-static int add_tag(void*tokens,int i,const char*tag) {
-	printf ("%s\t%s\n", get_token(tokens,i), tag);
-	return 0;
+static int add_tag(void*tokens,int i,const char* tag) {
+	int error;
+	printf ("%s\t%s\n", get_token(tokens,i, &error), tag);
+	return error;
 }
 int main(int argc, char ** argv)
 {
@@ -53,7 +54,7 @@ int main(int argc, char ** argv)
   Hunpos hp = hunpos_tagger_new(argv[1], argv[2], 3, 1000, &error);
   char* tokens[MAX_SENT_LENGTH];
   int i, n;
-  for (i=0; i<MAX_SENT_LENGTH;i++) 
+  for (i=0; i<MAX_SENT_LENGTH;i++)
   {
     tokens[i] =  (char *) malloc(MAX_TOKEN_LENGTH * sizeof(char));
   }
