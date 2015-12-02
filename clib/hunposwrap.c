@@ -11,6 +11,7 @@ static int is_initialized = 0;
 
 Hunpos hunpos_tagger_new(const char* model_file, const char* morph_table_file, int max_guessed_tags, int theta, int* error)
 {
+    *error = 0;
     if(model_file == NULL) {
 	*error = 3;
 	return NULL;
@@ -62,17 +63,20 @@ Hunpos hunpos_tagger_new(const char* model_file, const char* morph_table_file, i
 
   }
 
-void hunpos_tagger_tag(Hunpos hp, int n, void* tokens, const char* (*get_token)(void*,int), void* tags, int (*add_tag)(void*,int,const char*), int* error)
+void hunpos_tagger_tag(Hunpos hp, int n, void* tokens, const char* (*get_token)(void*,int, int*), void* tags, int (*add_tag)(void*,int,const char*), int* error)
 {
 	CAMLparam0();
-	CAMLlocal3 (return_value,list, v);
+	CAMLlocal3 (return_value, list, v);
 	int i;
 	list = Val_emptylist;  /* the [] */
+	*error = 0;
 	for(i = 0; i< n; i ++)
 	{
 		/* Allocate a cons cell */
 		v = caml_alloc_small(2, 0);
-		Store_field (v, 0, caml_copy_string(get_token(tokens,i)) );
+		const char* token = get_token(tokens, i, error);
+		if (*error != 0) CAMLreturn0;
+		Store_field (v, 0, caml_copy_string(token) );
 		Store_field (v, 1, list );
 		list = v;
 	}
@@ -83,7 +87,8 @@ void hunpos_tagger_tag(Hunpos hp, int n, void* tokens, const char* (*get_token)(
 	i = 0;
 	while(return_value != Val_emptylist) {
 		char* s = String_val(Field(return_value, Tag_cons));
-		add_tag(tags, i++, s);
+		*error = add_tag(tags, i++, s);
+		if (*error != 0) CAMLreturn0;
 		return_value = Field(return_value, 1);
 	}
 
@@ -95,6 +100,7 @@ void hunpos_tagger_tag(Hunpos hp, int n, void* tokens, const char* (*get_token)(
 void hunpos_tagger_destroy(Hunpos hp, int* error)
 {
 	CAMLparam0();
+	*error = 0;
 	caml_remove_global_root((value*) hp);
 	free(hp);
 	CAMLreturn0;
