@@ -5,9 +5,9 @@
 #define MAX_SENT_LENGTH 100
 #define MAX_TAG_LENGTH 100
 #define MAX_TOKEN_LENGTH 100
-void cerr(char* txt)
+void cerr(const char* txt)
 {
-  fprintf(stderr,txt);
+  fprintf(stderr, "%s", txt);
 }
 
 // reads a sentence from the stdin, stores the values in tokens (caller allocates)
