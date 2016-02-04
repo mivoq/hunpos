@@ -43,13 +43,24 @@ static void add_tag(void*tokens,int i,const char* tag, int* error) {
 }
 int main(int argc, char ** argv)
 {
+  char *modelfile = NULL;
+  char *morphtablefile = NULL;
   if(argc < 2)
   {
     cerr("usage: test model_file morph_table\n");
     return 1;
   }
+  modelfile = argv[1];
+  if(argc > 2) {
+    morphtablefile = argv[2];
+  }
   int error = 0;
-  Hunpos hp = hunpos_tagger_new(argv[1], argv[2], 3, 1000, &error);
+  Hunpos hp = hunpos_tagger_new(modelfile, morphtablefile, 3, 1000, &error);
+  if(error) {
+    cerr("Failed to load model file\n");
+    hunpos_tagger_destroy(hp, &error);
+    return 1;
+  }
   char* tokens[MAX_SENT_LENGTH];
   int i, n;
   for (i=0; i<MAX_SENT_LENGTH;i++)
