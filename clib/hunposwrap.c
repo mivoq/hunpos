@@ -39,6 +39,7 @@ Hunpos hunpos_tagger_new(const char* model_file, const char* morph_table_file, i
      }
 
      Hunpos tagger_fun = (Hunpos) malloc(sizeof(value));
+     *((value*)tagger_fun) = 0;
 
      // we pass some argument to the function
      CAMLlocalN ( args, 4 );
