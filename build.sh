@@ -57,7 +57,7 @@ releaseNx ()
   fi
   cp hunpos/trainer.native $DIR/hunpos-train$EXT
   cp hunpos/tagger.native $DIR/hunpos-tag$EXT
-  copy-release-files $DIR
+  copyReleaseFiles $DIR
   
   echo "compressing the release..."
   if [ $1 == "win" ]; then
@@ -97,7 +97,7 @@ release()
     esac;
 
     ocb;
-    release-nx $1;
+    releaseNx $1;
   fi
 }
 
