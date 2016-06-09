@@ -21,4 +21,12 @@ let ngram_toindex vocab ngram =
 	List.map (toindex vocab) ngram
 	
 let max (_, _, max) = !max
-	
+
+let fix_old_vocab (_, old_id2word, max) =
+  let (word2id, id2word, _) = create () in
+  let add (id, word) =
+    IHash.add_or_replace id2word id word;
+    SHash.add_or_replace word2id word id;
+  in
+   List.map add (IHash.to_list old_id2word);
+   (word2id, id2word, max)
