@@ -35,19 +35,21 @@ TO_CLEAN+=$(OBJECTS) test
 
 OCAMLC_WHERE:=$(shell $(OCAMLOPT) -where)
 
+ADDITIONAL_CFLAGS ?= -g
+
 all: test
 
 %.o: %.c
-	$(CC) -Wall -I "$(OCAMLC_WHERE)" -c "$(<)" -fPIC -o "$(@)"
+	$(CC) $(ADDITIONAL_CFLAGS) -Wall -I "$(OCAMLC_WHERE)" -c "$(<)" -fPIC -o "$(@)"
 
 libhunpos.a: $(SOURCES) $(OBJECTS) hunpos.o
 	ar rvs "$(@)" $(OBJECTS) hunpos.o
 
 hunpos.o: $(SOURCES)
-	$(OCAMLOPT) -I ../util -I ../hunpos -output-obj $(LIBS_OCAML) $(SOURCES_OCAML) -o hunpos.o
+	$(OCAMLOPT) $(ADDITIONAL_CFLAGS) -I ../util -I ../hunpos -output-obj $(LIBS_OCAML) $(SOURCES_OCAML) -o hunpos.o
 
 test: test.c $(SOURCES) $(OBJECTS) hunpos.o libhunpos.a
-	cc -Wall "$(<)" -o "$(@)" -I. libhunpos.a -L"$(OCAMLC_WHERE)" -lcamlstr -lunix -lasmrun_pic libhunpos.a -L"$(OCAMLC_WHERE)" -lcamlstr -lunix -lasmrun_pic -lm -ldl
+	$(CC) $(ADDITIONAL_CFLAGS) -Wall "$(<)" -o "$(@)" -I. libhunpos.a -L"$(OCAMLC_WHERE)" -lcamlstr -lunix -lasmrun_pic libhunpos.a -L"$(OCAMLC_WHERE)" -lcamlstr -lunix -lasmrun_pic -lm -ldl
 
 clean:
 	$(RM) $(TO_CLEAN) hunpos.o test
