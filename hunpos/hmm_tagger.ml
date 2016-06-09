@@ -183,7 +183,18 @@ let load file_name =
 	let (m, stat, apriori_tag_probs) = Marshal.from_channel ic in
 	close_in ic;
 	m.apriori_tag_probs <- apriori_tag_probs ;
-	(m, stat)	
+        (* In ocaml v4.00.0 the hashtbl hash function was changed
+        which means that when we read the data from a model file that
+        was made with a version that is older then that the hashes in
+        the vocabulary table are noe longer the same. The following
+        try-with checks for the error and applies the fix if
+        neccessary. *)
+	try
+          Vocab.toword m.tag_vocab 1;
+          (m, stat)
+        with
+          Not_found ->
+          ({m with tag_vocab = (Vocab.fix_old_vocab m.tag_vocab)}, stat)
 
 type seen_type = Seen | LowerCasedSeen | SpecialToken | UnSeen
 
