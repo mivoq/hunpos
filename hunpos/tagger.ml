@@ -59,7 +59,7 @@ let morphtable = ref ""
 let model_file = ref ""  
 let max_guessed_tags = ref 10
 let marktokens = ref false 
-let verbose = ref true
+let verbose = ref false
 let theta = ref 1000
   
 let string_arg var =  Some (fun x -> var := x ) 
