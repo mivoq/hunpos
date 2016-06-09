@@ -23,6 +23,7 @@ printf "-b,  --beam-theta=NUM              use NUM as theta in viterbi beam sear
 printf "\n";
 printf "Output options:\n";
 printf "-t,  --tokens-types           print the types of each token (default = no)\n";
+printf "-v,  --verbose                Print extra information while running.\n";
 printf "\n";
   
 
@@ -58,6 +59,7 @@ let morphtable = ref ""
 let model_file = ref ""  
 let max_guessed_tags = ref 10
 let marktokens = ref false 
+let verbose = ref true
 let theta = ref 1000
   
 let string_arg var =  Some (fun x -> var := x ) 
@@ -84,6 +86,7 @@ let specs =
   ( 'g', "max-guessed-tags", None, int_arg "max-guessed-tags" max_guessed_tags);
   ( 't', "token-types", set marktokens true, None);
   ( 'b', "beam-theta", None, int_arg "beam-theta" theta);
+  ( 'v', "verbose", set verbose true, None);
   ( 'h', "help", Some help, None)
 
 ]
@@ -107,10 +110,10 @@ let main () =
     in
     
     let model = Hmm_tagger.load !model_file in
-    
-    prerr_endline "model loaded";
+
+    if !verbose then prerr_endline "model loaded";
     let tagger = Hmm_tagger.compile_tagger  model hunmorph  !max_guessed_tags (log (float_of_int !theta)) in
-    prerr_endline "tagger compiled";
+    if !verbose then prerr_endline "tagger compiled";
 
     let ic =  stdin in
     Io.iter_sentence ic (tag_sentence  !marktokens tagger )
