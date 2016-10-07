@@ -15,6 +15,10 @@ typedef  void* TagList;
  */
 Hunpos hunpos_tagger_new(const char* modelfile, const char* morphtable, int max_guessed_tags, int theta, int* error);
 
+typedef const char* (*get_string_callback_t)(void*,int,int*);
+
+typedef void (*set_string_callback_t)(void*,int,const char*,int*);
+
 /**
  * @param hp
  * @param n tokens number
@@ -24,7 +28,7 @@ Hunpos hunpos_tagger_new(const char* modelfile, const char* morphtable, int max_
  * @param add_tag function that given @p tags, an index and the tag content, sets the tag content.
  * @param error pointer to an integer to report errors or NULL
  */
-void hunpos_tagger_tag(Hunpos hp, int n, void* tokens, const char* (*get_token)(void*,int, int*), void* tags, void (*add_tag)(void*,int,const char*, int*), int* error);
+void hunpos_tagger_tag(Hunpos hp, int n, void* tokens, get_string_callback_t get_token, void* tags, set_string_callback_t add_tag, int* error);
 
 /**
  * @param hp
