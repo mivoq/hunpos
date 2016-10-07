@@ -24,7 +24,16 @@ makeVersionMl()
 }
 ocb() 
 { 
-  $OCAMLBUILD $FLAGS $TARGETS 
+
+if (echo -e "`ocamlbuild -version | sed -e 's/^.*[[:space:]]//g'`\n4.02" | sort -ct. -k1,1n -k2,2n 2>/dev/null >/dev/null)
+then
+    FLAGS="$FLAGS"
+    PPFLAGF=-ppflag
+    PPFLAG="sed -e 's/^\(.*[[:space:]]\)\?Bytes\([^[:alpha:]].*\)\?$/\1String\2/g'"
+    $OCAMLBUILD $FLAGS $PPFLAGF "$PPFLAG" $TARGETS 
+else
+    $OCAMLBUILD $FLAGS $TARGETS
+fi
 } 
 
 usage()
@@ -122,4 +131,5 @@ if [ $# -eq 0 ]; then
   usage ;
 else 
   rule $*; 
-fi 
+fi
+
