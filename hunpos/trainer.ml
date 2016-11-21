@@ -93,3 +93,4 @@ Hmm_tagger.print_stat model;
 ;;
 
 let _ = main ();
+    Gc.full_major ();
