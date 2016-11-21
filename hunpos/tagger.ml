@@ -118,5 +118,5 @@ let main () =
     let ic =  stdin in
     Io.iter_sentence ic (tag_sentence  !marktokens tagger )
 
-
 let _ = main();
+    Gc.full_major ();
