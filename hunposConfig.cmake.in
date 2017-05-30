@@ -1,0 +1,16 @@
+# - Config file for the hunpos package
+# It defines the following variables
+#  HUNPOS_INCLUDE_DIRS - include directories for hunpos
+#  HUNPOS_LIBRARIES    - libraries to link against
+
+# Compute paths
+get_filename_component(HUNPOS_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+set(HUNPOS_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@")
+
+# Our library dependencies (contains definitions for IMPORTED targets)
+if(NOT TARGET hunpos AND NOT hunpos_BINARY_DIR)
+  include("${HUNPOS_CMAKE_DIR}/hunpos-targets.cmake")
+endif()
+
+# These are IMPORTED targets created by hunposTargets.cmake
+set(HUNPOS_LIBRARIES hunpos)
