@@ -75,4 +75,5 @@ int main(int argc, char ** argv)
     hunpos_tagger_tag(hp, n, tokens, get_token, tokens, add_tag, &error);
     printf ("\n");
   }
+  return 0;
 }
