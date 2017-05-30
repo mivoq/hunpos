@@ -37,6 +37,11 @@ Hunpos hunpos_tagger_new(const char* model_file, const char* morph_table_file, i
      {
            init_fun = caml_named_value("init_from_files");
      }
+     if (init_fun == NULL)
+     {
+	*error = 2;
+	CAMLreturnT(Hunpos, NULL);
+     }
 
      Hunpos tagger_fun = (Hunpos) malloc(sizeof(value));
      *((value*)tagger_fun) = 0;
@@ -106,5 +111,3 @@ void hunpos_tagger_destroy(Hunpos hp, int* error)
 	free(hp);
 	CAMLreturn0;
 }
-
-
