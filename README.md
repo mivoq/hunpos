@@ -1,7 +1,7 @@
 Hunpos is an open source reimplementation of TnT, the well known part-of-speech tagger by Thorsten Brants.
 
 Features
-=======
+========
 
 * Free and open source, even for commercial use.
 * For languages with more complex morphologies, HMM tagging could be quite competitive with the current generation of learning algorithms applying e.g. SVM and CRF methods. A major advantage is that the training/tagging cycle is orders of magnitude faster than in more complex models.
