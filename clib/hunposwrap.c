@@ -5,7 +5,9 @@
 #include <caml/memory.h>
 #include <caml/fail.h>
 #include "stdio.h"
+#define HUNPOS_SRC
 #include "hunpos.h"
+#undef HUNPOS_SRC
 
 static int is_initialized = 0;
 
