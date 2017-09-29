@@ -1,0 +1,77 @@
+
+cache:
+  # - C:\ocpwin\ocpwin64-20160113-4.02.1+ocp1-msvc64.zip
+  # - C:\ocpwin\ocpwin64-20160113-4.02.1+ocp1-mingw64.zip
+  - C:\ocaml\opam64.tar.xz
+  - C:\ocaml\opam32.tar.xz
+
+environment:
+  matrix:
+    - ARCH: x86
+      CPUBIT: 32
+      CYGWIN: C:\Cygwin
+      CYGSH: C:\Cygwin\bin\bash -lc
+      VCVARS: vcvars32.bat
+      GENERATOR: "Visual Studio 14 2015"
+    - ARCH: x86_64
+      CPUBIT: 64
+      CYGWIN: C:\Cygwin64
+      CYGSH: C:\Cygwin64\bin\bash -lc
+      VCVARS: amd64\vcvars64.bat
+      GENERATOR: "Visual Studio 14 2015 Win64"
+    # - OCPWIN_DIR: 4.02.1+ocp1-msvc64-20160113
+    #   OCPWIN_URL: http://www.ocamlpro.com/pub/ocpwin/ocpwin-builds/ocpwin64/20160113/ocpwin64-20160113-4.02.1+ocp1-msvc64.zip
+    #   OCPWIN_ARCHIVE: ocpwin64-20160113-4.02.1+ocp1-msvc64.zip
+    # - OCPWIN_DIR: 4.02.1+ocp1-mingw64-20160113
+    #   OCPWIN_URL: http://www.ocamlpro.com/pub/ocpwin/ocpwin-builds/ocpwin64/20160113/ocpwin64-20160113-4.02.1+ocp1-mingw64.zip
+    #   OCPWIN_ARCHIVE: ocpwin64-20160113-4.02.1+ocp1-mingw64.zip
+
+install:
+  - "\"%VS140COMNTOOLS:~0,-14%VC\\bin\\\"%VCVARS%"
+  - "echo \"%VS140COMNTOOLS:~0,-14%VC\\bin\\\"%VCVARS%"
+  # Install Opam prerequisites
+  - "%CYGWIN%\\setup-%ARCH%.exe -qnNdO -R %CYGWIN% -s http://cygwin.mirror.constant.com -l %CYGWIN%/var/cache/setup -P patch -P unzip"
+  # Install Opam
+  - cd C:\
+  - if not exist ocaml mkdir ocaml
+  - cd ocaml
+  - if not exist opam%CPUBIT%.tar.xz curl -L -O https://github.com/fdopen/opam-repository-mingw/releases/download/0.0.0.1/opam%CPUBIT%.tar.xz
+  - 7z -y e opam%CPUBIT%.tar.xz && 7z -y x opam%CPUBIT%.tar
+  - "%CYGSH% 'cd /cygdrive/c/ocaml ; opam%CPUBIT%/install.sh'"
+  # Install OCaml
+  # - "%CYGSH% 'opam init -y mingw https://github.com/fdopen/opam-repository-mingw.git --comp 4.04.0+mingw%CPUBIT% --switch 4.04.0+mingw%CPUBIT%'"
+  - "%CYGSH% 'PATH=$(dirname \"`which cl`\"):$PATH opam init -y mingw https://github.com/fdopen/opam-repository-mingw.git --comp 4.04.0+msvc%CPUBIT% --switch 4.04.0+msvc%CPUBIT%'"
+  - "%CYGSH% 'cat ~/.opam/opam-init/*.sh'"
+  - "%CYGSH% 'ocaml-env exec -- ocamlc -config'"
+  - cd "%APPVEYOR_BUILD_FOLDER%"
+  # - if not exist ocpwin mkdir ocpwin
+  # - cd ocpwin
+  # - echo get "%OCPWIN_ARCHIVE%" from "%OCPWIN_URL%"
+  # - if not exist "%OCPWIN_ARCHIVE%" curl -O "%OCPWIN_URL%"
+  # - 7z -y x "%OCPWIN_ARCHIVE%"
+  # - echo enter in "%OCPWIN_DIR%"
+  # - cd "%OCPWIN_DIR%"
+  # - bin\ocpwin -list
+  # - bin\ocpwin -in
+  # - refreshenv
+  # - cd "%APPVEYOR_BUILD_FOLDER%"
+
+configuration:
+  - Release
+#  - Debug
+
+image:
+  - Visual Studio 2015
+#  - Visual Studio 2017
+
+before_build:
+  - mkdir tmp-build
+  - cd tmp-build
+  - "%CYGSH% 'cd `cygpath \"%APPVEYOR_BUILD_FOLDER%\"`; cd tmp-build; ocaml-env exec -- cmake .. -G \"%GENERATOR%\" -DCMAKE_VERBOSE_MAKEFILE=on -DCMAKE_INSTALL_PREFIX:PATH=install -DCMAKE_OCaml_FLAGS=-verbose -DCMAKE_OCaml_LINKER_FLAGS=-verbose'"
+
+build_script:
+  - "%CYGSH% 'cd `cygpath \"%APPVEYOR_BUILD_FOLDER%\"`; cd tmp-build; ocaml-env exec -- cmake --build . --config %CONFIGURATION% -- /verbosity:detailed'"
+  - "%CYGSH% 'cd `cygpath \"%APPVEYOR_BUILD_FOLDER%\"`; find'"
+
+#test_script:
+#  - "%CYGSH% 'cd `cygpath \"%APPVEYOR_BUILD_FOLDER%\"`; cd tmp-build; if ! ctest; then cat Testing/Temporary/LastTest.log; exit 1; fi'"
