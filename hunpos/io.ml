@@ -161,7 +161,7 @@ let rec fold_tagged_sentence f a chan =
 	with End_of_file -> a
 
 external unsafe_get : string -> int -> char = "%string_unsafe_get"
-external unsafe_set : string -> int -> char -> unit = "%string_unsafe_set"
+external unsafe_set : bytes -> int -> char -> unit = "%string_unsafe_set"
 
 (** Return a copy of the argument, with all uppercase letters
    translated to lowercase, including accented letters of the ISO
@@ -181,5 +181,5 @@ let lowercase s =
 			if not !changed && c != c' then
 			 changed := true
 		done;
-        (r, !changed)
+        (Bytes.to_string r, !changed)
 	 end
