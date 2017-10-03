@@ -167,7 +167,7 @@ external unsafe_set : bytes -> int -> char -> unit = "%string_unsafe_set"
    translated to lowercase, including accented letters of the ISO
    Latin-1 (8859-1) character set.
 
-   Return true iif the original string had any uppercase charater.
+   Return true if the original string had any uppercase charater.
  *)
 let lowercase s =
 	let changed = ref false in
