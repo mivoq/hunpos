@@ -62,5 +62,13 @@ is currently able to handle:
 * out-of-tree compilation;
 * parallel building.
 
-Compilation on Windows has not been tried yet.
+Compilation on Mac OSX requires OCaml compiler 4.06 or later (which, at the
+time of writing has not yet been released; the development version of the
+compiler can also be used).
 
+Compilation on Windows is tricky and has only been tested using MSVC and
+the OCaml compiler from https://github.com/fdopen/opam-repository-mingw
+and a Unix-like shell (Cygwin) to configure the OCaml compiler and Opam,
+as well to run CMake and to compile Hunpos. Theoretically, once CMake
+has been run, it should be possible to compile Hunpos without a Unix-like
+shell, but this has not been tested.
