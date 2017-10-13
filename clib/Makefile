@@ -61,7 +61,7 @@ else
 endif
 
 test2: test.c $(SOURCES) $(OBJECTS) hunpos.o libhunpos.so
-	$(CC) $(ADDITIONAL_CFLAGS) -Wall "$(<)" -o "$(@)" -I. libhunpos.so
+	$(CC) $(ADDITIONAL_CFLAGS) -Wall "$(<)" -o "$(@)" -I. libhunpos.so -lm -ldl
 
 test: test.c $(SOURCES) $(OBJECTS) hunpos.o libhunpos.a
 	$(CC) $(ADDITIONAL_CFLAGS) -Wall "$(<)" -o "$(@)" -I. libhunpos.a -L"$(OCAMLC_WHERE)" -lcamlstr -lunix -lasmrun_pic libhunpos.a -L"$(OCAMLC_WHERE)" -lcamlstr -lunix -lasmrun_pic -lm -ldl
