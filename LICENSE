@@ -1,0 +1,5 @@
+Please, consider the different licences in the different directories.
+
+The OCaml scripts (directory cmake/) can be redistributed and used under the terms of the BSD license. For details, see the accompanying COPYING-CMAKE-SCRIPTS file.
+
+The code-analysis example (directory examples/code-analysis) is extracted from yars (http://sourceforge.net/apps/trac/yars/browser/branches/yars-refactoring/contrib/code-analysis?rev=507). It can be redistributed and modified under the terms of the GNU General Public License. For details, see the accompanying COPYING file.

@@ -1,0 +1,128 @@
+language: c
+
+branches:
+  only:
+    - master
+
+matrix:
+  allow_failures:
+    - env:
+        - CROSSCOMPILE=x86_64-w64-mingw32
+        - WINEDEBUG=-all
+    - env:
+        - CROSSCOMPILE=i686-w64-mingw32
+        - WINEDEBUG=-all
+  include:
+    - os: linux
+      compiler: gcc
+      env:
+        - CROSSCOMPILE=x86_64-w64-mingw32
+        - WINEDEBUG=-all
+      addons:
+        apt:
+          sources:
+            - sourceline: deb https://dl.winehq.org/wine-builds/ubuntu/ trusty main
+              key_url: https://dl.winehq.org/wine-builds/Release.key
+          packages:
+            - cmake
+            - swig
+            - ocaml-mingw-w64-x86-64
+            - gcc-mingw-w64-x86-64
+            - winehq-stable
+    - os: linux
+      compiler: gcc
+      env:
+        - CROSSCOMPILE=i686-w64-mingw32
+        - WINEDEBUG=-all
+      addons:
+        apt:
+          sources:
+            - sourceline: deb https://dl.winehq.org/wine-builds/ubuntu/ trusty main
+              key_url: https://dl.winehq.org/wine-builds/Release.key
+          packages:
+            - cmake
+            - swig
+            - ocaml-mingw-w64-i686
+            - gcc-mingw-w64-i686
+            - winehq-stable
+    - os: linux
+      compiler: gcc
+      env:
+        - CROSSCOMPILE=x86_64-opam-cross-windows
+        - WINEDEBUG=-all
+      addons:
+        apt:
+          sources:
+            - sourceline: ppa:avsm/ppa
+              key_url: http://keyserver.ubuntu.com:11371/pks/lookup?op=get&search=0xDD3D0AF807E3ADD0
+            - sourceline: deb https://dl.winehq.org/wine-builds/ubuntu/ trusty main
+              key_url: https://dl.winehq.org/wine-builds/Release.key
+          packages:
+            - cmake
+            - swig
+            - opam
+            - gcc-mingw-w64-x86-64
+            - winehq-stable
+    - os: linux
+      compiler: gcc
+      env:
+        - CROSSCOMPILE=i686-opam-cross-windows
+        - WINEDEBUG=-all
+      addons:
+        apt:
+          sources:
+            - sourceline: ppa:avsm/ppa
+              key_url: http://keyserver.ubuntu.com:11371/pks/lookup?op=get&search=0xDD3D0AF807E3ADD0
+            - sourceline: deb https://dl.winehq.org/wine-builds/ubuntu/ trusty main
+              key_url: https://dl.winehq.org/wine-builds/Release.key
+          packages:
+            - cmake
+            - swig
+            - opam
+            - gcc-mingw-w64-i686
+            - gcc-multilib
+            - winehq-stable
+sudo: required
+dist: trusty
+group: edge
+
+osx_image: xcode8
+
+os:
+  - linux
+  - osx
+
+compiler:
+  - gcc
+  - clang
+
+env:
+  - CROSSCOMPILE=native
+
+addons:
+  apt:
+    sources:
+      - sourceline: ppa:avsm/ppa
+        key_url: http://keyserver.ubuntu.com:11371/pks/lookup?op=get&search=0xDD3D0AF807E3ADD0
+    packages:
+      - cmake
+      - swig
+      - ocaml
+
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install swig    ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install curl    ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then curl -L https://github.com/ocaml/ocaml/archive/trunk.zip  -o ocaml-trunk.zip ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then unzip ocaml-trunk.zip; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then BASEDIR=`pwd` && cd ocaml-trunk && ./configure -prefix "$BASEDIR"/native-ocaml && make world && make bootstrap && make opt && make opt.opt && umask 022 && make install && cd "$BASEDIR"; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH="`pwd`"/native-ocaml/bin:"$PATH"; fi
+  - if [[ "$CROSSCOMPILE" == "x86_64-opam-cross-windows" ]]; then opam init -y --comp 4.04.0 --root ~/opam-cross-windows && eval `opam config env --root ~/opam-cross-windows` && opam switch 4.04.0 && eval `opam config env` && opam repository add windows git://github.com/whitequark/opam-cross-windows && opam pin -y add ocamlbuild https://github.com/ocaml/ocamlbuild.git && opam pin -y add topkg https://github.com/whitequark/topkg.git && opam install conf-flambda-windows && opam install -y ocaml-windows; fi
+  - if [[ "$CROSSCOMPILE" == "i686-opam-cross-windows" ]]; then opam init -y --comp 4.04.0+32bit --root ~/opam-cross-windows && eval `opam config env --root ~/opam-cross-windows` && opam switch 4.04.0+32bit && eval `opam config env` && opam repository add windows git://github.com/whitequark/opam-cross-windows && opam pin -y add ocamlbuild https://github.com/ocaml/ocamlbuild.git && opam pin -y add topkg https://github.com/whitequark/topkg.git && opam install conf-flambda-windows && opam install -y ocaml-windows; fi
+
+script:
+  - if [[ "$CROSSCOMPILE" == "native" ]]; then ocamlc -config; rm -fr tmp-build && mkdir -p tmp-build && cd tmp-build && cmake ../examples/hello_world_lib -DCMAKE_VERBOSE_MAKEFILE=on -DCMAKE_INSTALL_PREFIX:PATH="`pwd`"/install -DCMAKE_C_FLAGS="-Wall -Werror" -DCMAKE_OCaml_FLAGS=-verbose -DCMAKE_OCaml_LINKER_FLAGS=-verbose && make && ( make test || ( cat Testing/Temporary/LastTest.log ; exit 1 ) ); fi
+  - if [[ "$CROSSCOMPILE" == "x86_64-w64-mingw32" ]]; then x86_64-w64-mingw32-ocamlc -config; rm -fr tmp-build && mkdir -p tmp-build && cd tmp-build && cmake ../examples/hello_world_lib -DCMAKE_VERBOSE_MAKEFILE=on -DCMAKE_INSTALL_PREFIX:PATH="`pwd`"/install -DCMAKE_C_FLAGS="-Wall -Werror" -DCMAKE_OCaml_FLAGS=-verbose -DCMAKE_OCaml_LINKER_FLAGS=-verbose -DCMAKE_TOOLCHAIN_FILE=../toolchains/Toolchain-mingw64.cmake && make && ( winepath && make test || ( cat Testing/Temporary/LastTest.log ; exit 1 ) ) ; fi
+  - if [[ "$CROSSCOMPILE" == "i686-w64-mingw32" ]]; then i686-w64-mingw32-ocamlc -config; rm -fr tmp-build && mkdir -p tmp-build && cd tmp-build && cmake ../examples/hello_world_lib -DCMAKE_VERBOSE_MAKEFILE=on -DCMAKE_INSTALL_PREFIX:PATH="`pwd`"/install -DCMAKE_C_FLAGS="-Wall -Werror" -DCMAKE_OCaml_FLAGS=-verbose -DCMAKE_OCaml_LINKER_FLAGS=-verbose -DCMAKE_TOOLCHAIN_FILE=../toolchains/Toolchain-mingw32.cmake && make && ( winepath && make test || ( cat Testing/Temporary/LastTest.log ; exit 1 ) ) ; fi
+  - if [[ "$CROSSCOMPILE" == "x86_64-opam-cross-windows" ]]; then ocamlfind -toolchain windows ocamlc -config; rm -fr tmp-build && mkdir -p tmp-build && cd tmp-build && cmake ../examples/hello_world_lib -DCMAKE_VERBOSE_MAKEFILE=on -DCMAKE_INSTALL_PREFIX:PATH="`pwd`"/install -DCMAKE_C_FLAGS="-Wall -Werror" -DCMAKE_OCaml_FLAGS=-verbose -DCMAKE_OCaml_LINKER_FLAGS=-verbose -DCMAKE_TOOLCHAIN_FILE=../toolchains/Toolchain-opam-cross-windows-x86_64-mingw.cmake && make && ( winepath && make test || ( cat Testing/Temporary/LastTest.log ; exit 1 ) ) ; fi
+  - if [[ "$CROSSCOMPILE" == "i686-opam-cross-windows" ]]; then ocamlfind -toolchain windows ocamlc -config; rm -fr tmp-build && mkdir -p tmp-build && cd tmp-build && cmake ../examples/hello_world_lib -DCMAKE_VERBOSE_MAKEFILE=on -DCMAKE_INSTALL_PREFIX:PATH="`pwd`"/install -DCMAKE_C_FLAGS="-Wall -Werror" -DCMAKE_OCaml_FLAGS=-verbose -DCMAKE_OCaml_LINKER_FLAGS=-verbose -DCMAKE_TOOLCHAIN_FILE=../toolchains/Toolchain-opam-cross-windows-i686-mingw.cmake && make && ( winepath && make test || ( cat Testing/Temporary/LastTest.log ; exit 1 ) ) ; fi
