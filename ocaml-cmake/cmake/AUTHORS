@@ -1,0 +1,7 @@
+These CMake scripts for OCaml were originally created in 2010 by Judicaël Bedouet, j dot bedouet at infonie dot fr.
+
+A big THANK YOU goes to:
+
+  Keyan for helping me to debug the first version of these scripts.
+  
+  Florian for providing a patch to manage packages.
