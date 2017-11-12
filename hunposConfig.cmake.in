@@ -5,7 +5,9 @@
 
 # Compute paths
 get_filename_component(HUNPOS_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
-set(HUNPOS_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@")
+if(NOT HUNPOS_INCLUDE_DIRS)
+  set(HUNPOS_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@")
+endif(NOT HUNPOS_INCLUDE_DIRS)
 
 # Our library dependencies (contains definitions for IMPORTED targets)
 if(NOT TARGET hunpos AND NOT hunpos_BINARY_DIR)
@@ -13,4 +15,6 @@ if(NOT TARGET hunpos AND NOT hunpos_BINARY_DIR)
 endif()
 
 # These are IMPORTED targets created by hunposTargets.cmake
-set(HUNPOS_LIBRARIES hunpos)
+if(NOT HUNPOS_LIBRARIES)
+  set(HUNPOS_LIBRARIES hunpos)
+endif(NOT HUNPOS_LIBRARIES)
