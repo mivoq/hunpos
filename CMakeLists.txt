@@ -114,7 +114,7 @@ configure_file(hunposConfig.cmake.in "cmake/hunposConfig.cmake" @ONLY)
 configure_file(hunposConfigVersion.cmake.in "cmake/hunposConfigVersion.cmake" @ONLY)
 install(FILES "${PROJECT_BINARY_DIR}/cmake/hunposConfig.cmake" "${PROJECT_BINARY_DIR}/cmake/hunposConfigVersion.cmake" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/cmake/hunpos" COMPONENT dev)
 
-set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}")
+set(CONF_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/clib "${PROJECT_BINARY_DIR}")
 configure_file(hunposConfig.cmake.in "hunposConfig.cmake" @ONLY)
 configure_file(hunposConfigVersion.cmake.in "${PROJECT_BINARY_DIR}/hunposConfigVersion.cmake" @ONLY)
 
