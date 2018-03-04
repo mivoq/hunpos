@@ -16,5 +16,5 @@ endif()
 
 # These are IMPORTED targets created by hunposTargets.cmake
 if(NOT HUNPOS_LIBRARIES)
-  set(HUNPOS_LIBRARIES hunpos)
+  set(HUNPOS_LIBRARIES "@CONF_LIBRARIES@")
 endif(NOT HUNPOS_LIBRARIES)
