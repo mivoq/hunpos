@@ -109,11 +109,13 @@ install_ocaml_targets (hunpos-tag DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # Create the Config.cmake and ConfigVersion.cmake files
 get_filename_component(CMAKE_INSTALL_INCLUDEDIR_ABS ${CMAKE_INSTALL_INCLUDEDIR} ABSOLUTE BASE_DIR ${CMAKE_INSTALL_PREFIX})
+set(CONF_LIBRARIES hunpos)
 set(CONF_INCLUDE_DIRS ${CMAKE_INSTALL_INCLUDEDIR_ABS})
 configure_file(hunposConfig.cmake.in "cmake/hunposConfig.cmake" @ONLY)
 configure_file(hunposConfigVersion.cmake.in "cmake/hunposConfigVersion.cmake" @ONLY)
 install(FILES "${PROJECT_BINARY_DIR}/cmake/hunposConfig.cmake" "${PROJECT_BINARY_DIR}/cmake/hunposConfigVersion.cmake" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/cmake/hunpos" COMPONENT dev)
 
+get_property(CONF_LIBRARIES TARGET libhunpos PROPERTY IMPORTED_LOCATION)
 set(CONF_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/clib "${PROJECT_BINARY_DIR}")
 configure_file(hunposConfig.cmake.in "hunposConfig.cmake" @ONLY)
 configure_file(hunposConfigVersion.cmake.in "${PROJECT_BINARY_DIR}/hunposConfigVersion.cmake" @ONLY)
