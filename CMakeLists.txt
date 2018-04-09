@@ -124,6 +124,7 @@ set(CONF_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/clib "${PROJECT_BINARY_DIR}")
 configure_file(hunposConfig.cmake.in "hunposConfig.cmake" @ONLY)
 configure_file(hunposConfigVersion.cmake.in "${PROJECT_BINARY_DIR}/hunposConfigVersion.cmake" @ONLY)
 configure_file(libhunpos-targets.cmake.in "${PROJECT_BINARY_DIR}/libhunpos-targets.cmake" @ONLY)
+export(PACKAGE hunpos)
 
 add_ocaml_executable(hunpos-tag-byte BYTECODE SOURCES
 hunpos/lib/getopt.mli
